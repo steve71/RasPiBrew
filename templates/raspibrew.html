@@ -1,0 +1,261 @@
+$def with (mode, set_point, duty_cycle, cycle_time, p_param, i_param, d_param)
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+    	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>RasPi Brew Temperature Controller</title>
+        <link rel="stylesheet" type="text/css" href="/static/raspibrew.css" />
+        
+        <!--[if IE]><script type="text/javascript" src="excanvas.js"></script><![endif]-->
+		<script type="text/javascript" src="/static/gauge.js">			
+		</script>
+        <script type="text/javascript" src="/static/jquery.js">   
+        </script>
+        <script type="text/javascript" src="../static/jquery.flot.js">
+        </script>
+        
+        <script type="text/javascript">
+        
+        	//
+			// Copyright (c) 2012 Stephen P. Smith
+			//
+			// Permission is hereby granted, free of charge, to any person obtaining 
+			// a copy of this software and associated documentation files 
+			// (the "Software"), to deal in the Software without restriction, 
+			// including without limitation the rights to use, copy, modify, 
+			// merge, publish, distribute, sublicense, and/or sell copies of the Software, 
+			// and to permit persons to whom the Software is furnished to do so, 
+			// subject to the following conditions:
+			
+			// The above copyright notice and this permission notice shall be included 
+			// in all copies or substantial portions of the Software.
+			
+			// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+			// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+			// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+			// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+			// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR 
+			// IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+        
+			//declare globals
+        	var i, dataarray, options, plot, gaugeDisplay, newGaugeDisplay;
+
+            //long polling - wait for message
+		    function waitForMsg(){
+		       
+		        jQuery.ajax({
+		            type: "GET",
+		            url: "/getrand",
+		            dataType: "json",
+		            async: true, 
+		            cache: false,
+		            timeout:50000, 
+		            
+		            success: function(data){  
+		            	 
+		            	     //alert(data.mode);
+ 
+		            	     jQuery('#tempResponse').html(data.temp);
+		            	     jQuery('#modeResponse').html(data.mode);
+		            	     jQuery('#setpointResponse').html(data.set_point);
+		            	     jQuery('#dutycycleResponse').html(data.duty_cycle);
+		            	     jQuery('#cycletimeResponse').html(data.cycle_time);
+		            	     jQuery('#p_paramResponse').html(data.p_param);
+		            	     jQuery('#i_paramResponse').html(data.i_param);
+		            	     jQuery('#d_paramResponse').html(data.d_param);
+     
+		            	     gaugeDisplay.setValue(parseFloat(data.temp));
+		            	     
+		            	     tempdataarray.push([i,parseFloat(data.temp)]);
+		            	     heatdataarray.push([i,parseFloat(data.duty_cycle)]);
+		            	              	     
+		            	     while (tempdataarray.length > jQuery('#windowSizeText').val()){
+		            	     	tempdataarray.shift();
+		            	     }
+		            	     
+		            	     while (heatdataarray.length > jQuery('#windowSizeText').val()){
+		            	     	heatdataarray.shift();
+		            	     }
+		            	     
+		            	     i++;
+		            	     plot = jQuery.plot($$("#tempplot"), [ tempdataarray ], options);
+		            	     plot = jQuery.plot($$("#heatplot"), [ heatdataarray ], options);
+		            	     //plot.setData([dataarray]);
+        					 //plot.draw();
+		            	     setTimeout(
+		                    	'waitForMsg()', 
+		                    	1 //in millisec
+		        			 );
+		            }
+		        });
+		        
+		    };
+		          jQuery(document).ready(function() {
+		          		            
+			            jQuery('#controlPanelForm').submit(function() {
+			            	         	 	
+						     formdata = jQuery(this).serialize();
+						     
+						     jQuery.ajax({
+					            type: "POST",
+                                data: formdata,
+                                success: function(data) {
+                                },
+                             });
+						     return false;
+						});
+						
+	                    //draw gauge
+						var options_gauge = {
+							majorTickLabel: true,
+							value: 60,
+							label: 'Temp',
+							unitsLabel: '' + String.fromCharCode(186),
+							min: 60,
+							max: 220,
+							majorTicks: 9,
+							minorTicks: 9, // small ticks inside each major tick
+							greenFrom: 60,
+							greenTo: 95,
+							yellowFrom: 95,
+							yellowTo: 150,
+							redFrom: 150,
+							redTo: 200
+						};
+						
+						gaugeDisplay = new Gauge( document.getElementById( 'tempGauge'), options_gauge );	
+						
+		          	    // line plot Settings
+		          		i = 0;
+		          		tempdataarray = []; 
+		          		heatdataarray = []; 
+		          		options = {
+						  series: { shadowSize: 0 }, 
+						  yaxis: { min: null, max: null },
+						  xaxis: { show: false }
+						}; 
+						
+	         			waitForMsg();
+     
+                     });
+        
+             </script>
+    </head>
+    
+    <body>
+    	<div class="ControlResponse" id="tempheatplots" style="float:right;">
+	    	<div class="tempdata"> 
+	    		<p class="plottitle">Temperature Plot </p>
+		    	<div id="tempplot" align=left  style="width:600px;height:200px;">
+		    	</div>
+		    	<p class="plottitle">Heat Plot </p>
+		    	<div id="heatplot" align=left  style="width:600px;height:200px;">
+		    	</div>
+			<span id = windowSize>	
+	    	    <br/>
+	    		Window Size: <input id="windowSizeText" type="text" name="windowSize"  maxlength = "4" size ="4" value=100 style="text-align: right;"/> 
+			</span>
+		    </div>
+	    </div>
+	    <div class="ControlResponse" style="float:left;">
+			<canvas id="tempGauge" width="300" height="300">
+			</canvas>
+		
+	    	<div class="tempControlResponse">
+	    	<p align=center style="font-size: large;text-decoration: underline;">Current Status</p> 
+	     	<table>
+	     		<tr>
+			        <td align=right>Temperature: </td>
+			        <td id="tempResponse" align=right>temp</td>
+			        <td>&#176F</td> 
+		        </tr>
+		        <tr>
+			        <td align=right>Mode: </td>
+			        <td id="modeResponse" align=right>off</td>
+		        </tr>
+		        <tr>
+		    		<td align=right>Set Point: </td>
+		    		<td id="setpointResponse" align=right>0</td>
+		    		<td>&#176F</td>    	
+		    		<td align=right>P: </td> 
+		    		<td id="p_paramResponse">0</td>
+	    		<tr>
+	    			<td align=right>Duty Cycle: </td>
+	    			<td id="dutycycleResponse" align=right>50</td>	
+	    			<td>%</td>
+	    			<td align=right>I: </td> 
+	    		    <td id="i_paramResponse">0</td>
+	    		</tr>
+	    		<tr>
+	    			<td align=right>Cycle Time: </td>
+	    			<td id="cycletimeResponse" align=right>2</td>
+	    			<td style="width:50px">secs </td>	
+	    			<td align=right>D: </td> 
+	    		    <td id="d_paramResponse">0</td>
+	    		</tr>
+	        </table>
+        </div>   
+        <p align=center style="font-size: large;text-decoration: underline;">Command</p>
+	    <div class="controlPanel" align=center>
+    		<form id = "controlPanelForm" method="post">
+    			$if mode == "auto":
+		    		<input class="modeclass" type="radio" name="mode" value="auto" checked/> Auto
+		    	$else: 
+		    	    <input class="modeclass" type="radio" name="mode" value="auto"/> Auto
+		    	$if mode == "manual":
+		    		<input class="modeclass" type="radio" name="mode" value="manual" checked/> Manual
+		        $else:
+		        	<input class="modeclass" type="radio" name="mode" value="manual"/> Manual
+		        $if mode == "off":
+		    		<input id="off" class="modeclass" type="radio" name="mode" value="off" checked/> Off <br> <br>
+		        $else:
+		        	<input class="modeclass" type="radio" name="mode" value="off"/> Off <br> <br>
+		    	
+		    	<table>
+		    		<tr>
+		    			<td align=right>Set Point: </td>
+		    			<td>
+		    				<input type="text" name="setpoint"  maxlength = "4" size ="4" value=$set_point style="text-align: right;"/> 
+		    			</td>
+		    			<td>&#176F</td>
+		    			<td align=right>  P: </td> 
+	    		        <td>
+	    					<input type="text" name="p"  maxlength = "4" size ="4" value=$p_param style="text-align: right;"/> <br>
+	    				</td>
+	    			</tr>
+	    			<tr>
+	    				<td align=right>Duty Cycle: </td>
+	    				<td>
+	    					<input id="dutycycle" type="text" name="dutycycle"  maxlength = "4" size ="4" value=$duty_cycle style="text-align: right;"/> 
+	    				</td>
+	    				<td>%</td>
+	    				<td align=right>  I: </td> 
+	    		        <td>
+	    					<input type="text" name="i"  maxlength = "4" size ="4" value=$i_param style="text-align: right;"/> <br>
+	    				</td>
+	    			</tr>
+	    			<tr>
+	    				<td align=right>Cycle Time: </td>
+	    				<td>
+	    					<input type="text" name="cycletime"  maxlength = "4" size ="4" value=$cycle_time style="text-align: right;"/>   
+	    			   </td>
+	    			   <td style="width:50px">secs</td>
+	    			   <td align=right>  D: </td> 
+	    		        <td>
+	    					<input type="text" name="d"  maxlength = "4" size ="4" value=$d_param style="text-align: right;"/> 
+	    				</td>
+	    			</tr>
+	    		</table>
+	    		<br>
+	    		<button id = "sendcommand" type="submit" value="SubmitCommand" align=center>Send Command</button> 
+	    	</form>		
+	    </div>
+	    </div>
+ 
+    </body>
+    
+</html>
