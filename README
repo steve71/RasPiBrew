@@ -1,25 +1,12 @@
-
 Summary: A wireless and inexpensive Rasberry Pi web-controlled brewery 
 
-Status: Current focus is controlling an electric heating element in a brew kettle to set temperatures and regulate boil. 
-The user can set the duty cycle (manual mode) to control the length of time a heating element stays on over a fixed
-length of time.  While this is happening, all status included temperature is sent back approx. every second.  The 
-duty cycle and temperature is plotted over time and temperature is also displayed on a gauge.  A PID algorithm will
-next be implemented next so that set points can be met quickly with minimum overshoot.
+Status: Current focus is controlling an electric heating element in a brew kettle to set temperatures and regulate boil.  The user can set the duty cycle (manual mode) to control the length of time a heating element stays on over a fixed length of time.  While this is happening, all status included temperature is sent back approx. every second.  The duty cycle and temperature is plotted over time and temperature is also displayed on a gauge.  A PID algorithm will next be implemented next so that set points can be met quickly with minimum overshoot.
 
-Description: A raspberry pi computer is an inexpensive and very expandable solution to controlling a brewery.  Used in
-combination with an i2c general purpose i/o expander to control relays, 1-wire temperature sensors and a 
-usb wifi dongle a wirelessly controlled brewing system can be developed.  The Raspberry Pi can run a web server to 
-communicate the data to a browser or application on a computer or smartphone.
+Description: A raspberry pi computer is an inexpensive and very expandable solution to controlling a brewery.  Used in combination with an i2c general purpose i/o expander to control relays, 1-wire temperature sensors and a usb wifi dongle a wirelessly controlled brewing system can be developed.  The Raspberry Pi can run a web server to communicate the data to a browser or application on a computer or smartphone.
 
-The language for the server side software is Python for rapid development.  Multiple processes connected with 
-pipes/queues to communicate between them can be used.  For instance, one process can only get the temperature 
-while another turns a heating element on and off.  A third parent temp control process can control the heating process 
-with information from the temp process and relay the information back to the web server.
+The language for the server side software is Python for rapid development.  Multiple processes connected with pipes/queues to communicate between them can be used.  For instance, one process can only get the temperature while another turns a heating element on and off.  A third parent temp control process can control the heating process with information from the temp process and relay the information back to the web server.
 
-On the client side jQuery and various plugins can be used to display data such as line charts and gauges.  
-An android app that I wrote to communicate with a micro-controller for heating a brew kettle can also be used in 
-this project once the interfaced is changed to web-based from TCP/IP/UDP.
+On the client side jQuery and various plugins can be used to display data such as line charts and gauges.  An android app that I wrote to communicate with a micro-controller for heating a brew kettle can also be used in this project once the interfaced is changed to web-based from TCP/IP/UDP.
 
 jQuery and two jQuery plugins (jsGauge and FLot) are used in the client:
 http://jquery.com/
