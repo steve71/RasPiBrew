@@ -1,4 +1,4 @@
-$def with (mode, set_point, duty_cycle, cycle_time, p_param, i_param, d_param)
+$def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
@@ -49,7 +49,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, p_param, i_param, d_param)
 		       
 		        jQuery.ajax({
 		            type: "GET",
-		            url: "/getrand",
+		            url: "/getstatus",
 		            dataType: "json",
 		            async: true, 
 		            cache: false,
@@ -62,9 +62,9 @@ $def with (mode, set_point, duty_cycle, cycle_time, p_param, i_param, d_param)
 		            	     jQuery('#tempResponse').html(data.temp);
 		            	     jQuery('#modeResponse').html(data.mode);
 		            	     jQuery('#setpointResponse').html(data.set_point);
-		            	     jQuery('#dutycycleResponse').html(data.duty_cycle);
+		            	     jQuery('#dutycycleResponse').html(parseFloat(data.duty_cycle).toFixed(2));
 		            	     jQuery('#cycletimeResponse').html(data.cycle_time);
-		            	     jQuery('#p_paramResponse').html(data.p_param);
+		            	     jQuery('#k_paramResponse').html(data.k_param);
 		            	     jQuery('#i_paramResponse').html(data.i_param);
 		            	     jQuery('#d_paramResponse').html(data.d_param);
      
@@ -181,21 +181,24 @@ $def with (mode, set_point, duty_cycle, cycle_time, p_param, i_param, d_param)
 		    		<td align=right>Set Point: </td>
 		    		<td id="setpointResponse" align=right>0</td>
 		    		<td>&#176F</td>    	
-		    		<td align=right>P: </td> 
-		    		<td id="p_paramResponse">0</td>
+		    		<td align=right>PID Kf parameter </td> 
+		    		<td id="k_paramResponse">0</td>
+		    		<td>%/&#176F</td>
 	    		<tr>
 	    			<td align=right>Duty Cycle: </td>
 	    			<td id="dutycycleResponse" align=right>50</td>	
 	    			<td>%</td>
-	    			<td align=right>I: </td> 
+	    			<td align=right>PID Ti parameter: </td> 
 	    		    <td id="i_paramResponse">0</td>
+	    		    <td>secs</td>
 	    		</tr>
 	    		<tr>
 	    			<td align=right>Cycle Time: </td>
 	    			<td id="cycletimeResponse" align=right>2</td>
 	    			<td style="width:50px">secs </td>	
-	    			<td align=right>D: </td> 
+	    			<td align=right>PID Td parameter: </td> 
 	    		    <td id="d_paramResponse">0</td>
+	    		    <td>secs</td>
 	    		</tr>
 	        </table>
         </div>   
@@ -222,10 +225,11 @@ $def with (mode, set_point, duty_cycle, cycle_time, p_param, i_param, d_param)
 		    				<input type="text" name="setpoint"  maxlength = "4" size ="4" value=$set_point style="text-align: right;"/> 
 		    			</td>
 		    			<td>&#176F</td>
-		    			<td align=right>  P: </td> 
+		    			<td align=right>Pid Kf parameter: </td> 
 	    		        <td>
-	    					<input type="text" name="p"  maxlength = "4" size ="4" value=$p_param style="text-align: right;"/> <br>
+	    					<input type="text" name="p"  maxlength = "4" size ="4" value=$k_param style="text-align: right;"/> <br>
 	    				</td>
+	    				<td>%/&#176F</td>
 	    			</tr>
 	    			<tr>
 	    				<td align=right>Duty Cycle: </td>
@@ -233,10 +237,11 @@ $def with (mode, set_point, duty_cycle, cycle_time, p_param, i_param, d_param)
 	    					<input id="dutycycle" type="text" name="dutycycle"  maxlength = "4" size ="4" value=$duty_cycle style="text-align: right;"/> 
 	    				</td>
 	    				<td>%</td>
-	    				<td align=right>  I: </td> 
+	    				<td align=right>PID Ti parameter: </td> 
 	    		        <td>
 	    					<input type="text" name="i"  maxlength = "4" size ="4" value=$i_param style="text-align: right;"/> <br>
 	    				</td>
+	    				<td>secs</td>
 	    			</tr>
 	    			<tr>
 	    				<td align=right>Cycle Time: </td>
@@ -244,10 +249,11 @@ $def with (mode, set_point, duty_cycle, cycle_time, p_param, i_param, d_param)
 	    					<input type="text" name="cycletime"  maxlength = "4" size ="4" value=$cycle_time style="text-align: right;"/>   
 	    			   </td>
 	    			   <td style="width:50px">secs</td>
-	    			   <td align=right>  D: </td> 
+	    			   <td align=right>PID Td parameter:</td> 
 	    		        <td>
 	    					<input type="text" name="d"  maxlength = "4" size ="4" value=$d_param style="text-align: right;"/> 
 	    				</td>
+	    				<td>secs</td>
 	    			</tr>
 	    		</table>
 	    		<br>
