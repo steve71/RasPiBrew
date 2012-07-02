@@ -15,6 +15,10 @@ http://code.google.com/p/flot/
 
 Include gauge.js, jquery.flot.js and jquery.js in the /static directory and launch raspibrew.py as superuser
 
+The PID algorithm is called from Python using ctypes with a dynamic library.  The C code is from "PID Controller Calculus with full C source source code" by Emile van de Logt
+An explanation on how to tune it is from the following web site:
+http://www.vandelogt.nl/htm/regelen_pid_uk.htm.  
+
 Hardware used to test so far: Raspberry Pi, Jeelabs Expander Plug (I2C), 1-wire DS18B20 digital thermometer, 4.7k resistor, 1k resistor and an LED.  For wireless a Belkin USB wifi dongle is used.
 
 Information on Raspberry Pi low-level peripherals:
