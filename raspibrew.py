@@ -117,11 +117,12 @@ def gettempProc(conn):
     p = current_process()
     print 'Starting:', p.name, p.pid
     while (True):
-        #t = time.time()
+        t = time.time()
+        time.sleep(.5) #.1+~.83 = ~1.33 seconds
         num = tempdata()
-        #elapsed = time.time() - t
-        time.sleep(.05) #.5+~.83 = ~1.33 seconds
-        conn.send(num)
+        elapsed = "%.2f" % (time.time() - t)
+        conn.send([num, elapsed])
+        
 
 def getonofftime(cycle_time, duty_cycle):
     duty = duty_cycle/100.0
@@ -217,10 +218,10 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
         while (True):
             readytemp = False
             while parent_conn_temp.poll():
-                temp = parent_conn_temp.recv() #non blocking receive    
+                temp, elapsed = parent_conn_temp.recv() #non blocking receive    
                 readytemp = True
             if readytemp == True:
-                conn.send([temp, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param]) #GET request
+                conn.send([temp, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param]) #GET request
                 readytemp == False
             readyheat = False    
             while parent_conn_heat.poll(): #non blocking receive
@@ -281,8 +282,9 @@ class getstatus:
 
     def GET(self):
         global parent_conn
-        temp, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = parent_conn.recv()
+        temp, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = parent_conn.recv()
         out = json.dumps({"temp" : temp,
+                       "elapsed" : elapsed,
                           "mode" : mode,
                     "cycle_time" : cycle_time,
                     "duty_cycle" : duty_cycle,

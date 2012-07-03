@@ -42,7 +42,9 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 			// IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         
 			//declare globals
-        	var i, dataarray, options, plot, gaugeDisplay, newGaugeDisplay;
+        	var i, t, dataarray, options_temp, options_heat, plot, gaugeDisplay, newGaugeDisplay
+        	i = 0
+        	t = 0
 
             //long polling - wait for message
 		    function waitForMsg(){
@@ -70,8 +72,11 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
      
 		            	     gaugeDisplay.setValue(parseFloat(data.temp));
 		            	     
-		            	     tempdataarray.push([i,parseFloat(data.temp)]);
-		            	     heatdataarray.push([i,parseFloat(data.duty_cycle)]);
+		            	     tempdataarray.push([t,parseFloat(data.temp)]);
+		            	     heatdataarray.push([t,parseFloat(data.duty_cycle)]);
+		            	     
+		            	     //tempdataarray.push([i,parseFloat(data.temp)]);
+		            	     //heatdataarray.push([i,parseFloat(data.duty_cycle)]);
 		            	              	     
 		            	     while (tempdataarray.length > jQuery('#windowSizeText').val()){
 		            	     	tempdataarray.shift();
@@ -81,9 +86,13 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		            	     	heatdataarray.shift();
 		            	     }
 		            	     
-		            	     i++;
-		            	     plot = jQuery.plot($$("#tempplot"), [ tempdataarray ], options);
-		            	     plot = jQuery.plot($$("#heatplot"), [ heatdataarray ], options);
+		            	     t += parseFloat(data.elapsed)
+		            	     
+		            	     jQuery('#windowSizeText').change(function(){tempdataarray=[];heatdataarray=[];t = 0;});
+		            	     
+		            	     //i++;
+		            	     plot = jQuery.plot($$("#tempplot"), [ tempdataarray ], options_temp);
+		            	     plot = jQuery.plot($$("#heatplot"), [ heatdataarray ], options_heat);
 		            	     //plot.setData([dataarray]);
         					 //plot.draw();
 		            	     setTimeout(
@@ -133,10 +142,15 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		          		i = 0;
 		          		tempdataarray = []; 
 		          		heatdataarray = []; 
-		          		options = {
+		          		options_temp = {
 						  series: { shadowSize: 0 }, 
 						  yaxis: { min: null, max: null },
-						  xaxis: { show: false }
+						  xaxis: { show: true }
+						}; 
+						options_heat = {
+						  series: { shadowSize: 0 }, 
+						  yaxis: { min: 0, max: 100 },
+						  xaxis: { show: true }
 						}; 
 						
 	         			waitForMsg();
