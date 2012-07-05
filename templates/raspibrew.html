@@ -42,9 +42,85 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 			// IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         
 			//declare globals
-        	var i, t, dataarray, options_temp, options_heat, plot, gaugeDisplay, newGaugeDisplay
+        	var i, t, dataarray, options_temp, options_heat, plot, gaugeDisplay, newGaugeDisplay, mSlope
         	i = 0
         	t = 0
+        	
+        	function findLineByLeastSquares(in_pointArray) {
+        		//
+        		// Javascript Algorithm by DracoBlue
+        		// http://dracoblue.net/dev/linear-least-squares-in-javascript/159/
+        		// -Modified to accept array of points.
+        		//
+				var sum_x = 0;
+				var sum_y = 0;
+				var sum_xy = 0;
+				var sum_xx = 0;
+				var count = 0;
+				var values_x = [];
+				var values_y = [];
+				
+				var in_pointArrayLength = in_pointArray.length;
+				for (var i=0; i<in_pointArrayLength; i++) {
+					values_x.push(in_pointArray[i][0]);
+					values_y.push(in_pointArray[i][1]);
+				}
+				
+				/*
+				* We'll use those variables for faster read/write access.
+				*/
+				var x = 0;
+				var y = 0;
+				var values_length = values_x.length;
+				
+				if (values_length != values_y.length) {
+					throw new Error('The parameters values_x and values_y need to have same size!');
+				}
+				
+				/*
+				* Nothing to do.
+				*/
+				if (values_length === 0) {
+					return [ [], [] ];
+				}
+				
+				/*
+				* Calculate the sum for each of the parts necessary.
+				*/
+				for (var v = 0; v < values_length; v++) {
+					x = values_x[v];
+					y = values_y[v];
+					sum_x += x;
+					sum_y += y;
+					sum_xx += x*x;
+					sum_xy += x*y;
+					count++;
+				}
+				
+				/*
+				* Calculate m and b for the formular:
+				* y = x * m + b
+				*/
+				var m = (count*sum_xy - sum_x*sum_y) / (count*sum_xx - sum_x*sum_x);
+				var b = (sum_y/count) - (m*sum_x)/count;
+				
+				/*
+				* We will make the x and y result line now
+				*/
+				//var result_values_x = [];
+				//var result_values_y = [];
+				var out_pointArray = [];
+				
+				for (var v = 0; v < values_length; v++) {
+					x = values_x[v];
+					y = x * m + b;
+					out_pointArray.push([x,y]);
+					//result_values_x.push(x);
+					//result_values_y.push(y);
+				}
+
+				return [out_pointArray, m];
+			}
 
             //long polling - wait for message
 		    function waitForMsg(){
@@ -91,7 +167,15 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		            	     jQuery('#windowSizeText').change(function(){tempdataarray=[];heatdataarray=[];t = 0;});
 		            	     
 		            	     //i++;
-		            	     plot = jQuery.plot($$("#tempplot"), [ tempdataarray ], options_temp);
+		            	     if (jQuery('input[name=LeastSquares]').is(':checked')) {
+		            	     	[fitData, mSlope] = findLineByLeastSquares(tempdataarray);
+		            	     	jQuery('#normSlope').html(mSlope/data.duty_cycle);
+		            	     	plot = jQuery.plot($$("#tempplot"), [ tempdataarray, fitData ], options_temp);
+		            	     }
+		            	     else {
+		            	     	jQuery('#normSlope').html("");
+		            	     	plot = jQuery.plot($$("#tempplot"), [ tempdataarray ], options_temp);
+		            	     }
 		            	     plot = jQuery.plot($$("#heatplot"), [ heatdataarray ], options_heat);
 		            	     //plot.setData([dataarray]);
         					 //plot.draw();
@@ -115,6 +199,10 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
                                 success: function(data) {
                                 },
                              });
+                             //reset plot
+                             tempdataarray=[];
+                             heatdataarray=[];
+                             t = 0;
 						     return false;
 						});
 						
@@ -169,10 +257,18 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		    	<p class="plottitle">Heat Plot </p>
 		    	<div id="heatplot" align=left  style="width:600px;height:200px;">
 		    	</div>
-			<span id = windowSize>	
 	    	    <br/>
-	    		Window Size: <input id="windowSizeText" type="text" name="windowSize"  maxlength = "4" size ="4" value=100 style="text-align: right;"/> 
+	    		Window Size: <input id="windowSizeText" type="text" name="windowSize"  maxlength = "4" size ="4" value=10000 style="text-align: right;"/> 
+			<br><br>
+			<input type="checkbox" name="LeastSquares"/> Least Squares Fit<br />
+			<br>
+			Normalized Slope (a): 
+			<span id = "normSlope">
 			</span>
+			<br> <br>
+			Kf = 1.2 / (DeadTime * a)<br>
+			Ti = 2.0 * DeadTime<br>
+			Td = 0.5 * DeadTime<br>
 		    </div>
 	    </div>
 	    <div class="ControlResponse" style="float:left;">
