@@ -23,8 +23,7 @@
 from multiprocessing import Process, Pipe, current_process
 from subprocess import Popen, PIPE, call
 from datetime import datetime
-import web, time, random, json
-#uncomment for raspberry pi
+import web, time, random, json, serial
 from smbus import SMBus
 from pid import pid as PIDController
 
@@ -82,7 +81,7 @@ class raspibrew:
                 self.duty_cycle = float(datalistkey[1])
             if datalistkey[0] == "cycletime":
                 self.cycle_time = float(datalistkey[1])
-            if datalistkey[0] == "p":
+            if datalistkey[0] == "k":
                 self.k_param = float(datalistkey[1])
             if datalistkey[0] == "i":
                 self.i_param = float(datalistkey[1])
@@ -151,22 +150,22 @@ def heatProc(cycle_time, duty_cycle, conn):
     p = current_process()
     print 'Starting:', p.name, p.pid
     bus = SMBus(0)
-    bus.write_byte_data(0x20,0x00,0x00) #set I/0 to write
+    bus.write_byte_data(0x26,0x00,0x00) #set I/0 to write
     while (True):
         while (conn.poll()): #get last
             cycle_time, duty_cycle = conn.recv()
         conn.send([cycle_time, duty_cycle])    
         if duty_cycle == 0:
-            bus.write_byte_data(0x20,0x09,0x00)
+            bus.write_byte_data(0x26,0x09,0x00)
             time.sleep(cycle_time)
         elif duty_cycle == 100:
-            bus.write_byte_data(0x20,0x09,0x01)
+            bus.write_byte_data(0x26,0x09,0x01)
             time.sleep(cycle_time)
         else:
             on_time, off_time = getonofftime(cycle_time, duty_cycle)
-            bus.write_byte_data(0x20,0x09,0x01)
+            bus.write_byte_data(0x26,0x09,0x01)
             time.sleep(on_time)
-            bus.write_byte_data(0x20,0x09,0x00)
+            bus.write_byte_data(0x26,0x09,0x00)
             time.sleep(off_time)
         
         #y = datetime.now()
@@ -203,7 +202,7 @@ def tempControlProcTest(mode, cycle_time, duty_cycle, set_point, k_param, i_para
 #controls 
 
 def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param, conn):
-    
+            
         p = current_process()
         print 'Starting:', p.name, p.pid
         parent_conn_temp, child_conn_temp = Pipe()            
@@ -213,12 +212,25 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
         parent_conn_heat, child_conn_heat = Pipe()           
         pheat = Process(name = "heatProc", target=heatProc, args=(cycle_time, duty_cycle, child_conn_heat))
         pheat.daemon = True
-        pheat.start()  
+        pheat.start() 
+        
+        #initialize LCD
+        ser = serial.Serial("/dev/ttyAMA0", 9600)
+        ser.write("?BFF")
+        ser.write("?f?a")
+        ser.write("?y0?x00PID off      ")
+        ser.write("?y1?x00HLT:")
+        ser.write("?y3?x00Heat: off      ")
         
         while (True):
             readytemp = False
             while parent_conn_temp.poll():
                 temp, elapsed = parent_conn_temp.recv() #non blocking receive    
+                ser.write("?y1?x05")
+                ser.write(temp)
+                #ser.write("?y1?x10")
+                ser.write("?D70609090600000000") #degree symbol
+                ser.write("?7F   ") #degree F
                 readytemp = True
             if readytemp == True:
                 conn.send([temp, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param]) #GET request
@@ -226,6 +238,9 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
             readyheat = False    
             while parent_conn_heat.poll(): #non blocking receive
                 cycle_time, duty_cycle = parent_conn_heat.recv()
+                ser.write("?y2?x00Duty: ")
+                ser.write("%3.1f" % duty_cycle)
+                ser.write("%     ")
                 readyheat = True
             if readyheat == True:
                 if mode == "auto":
@@ -240,15 +255,27 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
                 readyPOST = True
             if readyPOST == True:
                 if mode == "auto":
+                    ser.write("?y0?x00Auto Mode     ")
+                    ser.write("?y1?x00HLT:")
+                    ser.write("?y3?x00Set To: ")
+                    ser.write("%3.1f" % set_point)
+                    ser.write("?D70609090600000000") #degree symbol
+                    ser.write("?7F   ") #degree F
                     print "auto selected"
                     pid = PIDController.PID(cycle_time, k_param, i_param, d_param) #init pid
                     duty_cycle = pid.calcPID(float(temp), float(set_point), 1)
                     parent_conn_heat.send([cycle_time, duty_cycle])  
                 if mode == "manual": 
+                    ser.write("?y0?x00Manual Mode     ")
+                    ser.write("?y1?x00BK: ")
+                    ser.write("?y3?x00Heat: on       ")
                     print "manual selected"
                     duty_cycle = duty_cycle_temp
                     parent_conn_heat.send([cycle_time, duty_cycle])    
                 if mode == "off":
+                    ser.write("?y0?x00PID off      ")
+                    ser.write("?y1?x00HLT:")
+                    ser.write("?y3?x00Heat: off      ")
                     print "off selected"
                     duty_cycle = 0
                     parent_conn_heat.send([cycle_time, duty_cycle])
@@ -260,7 +287,8 @@ class getrand:
         pass
     def GET(self):
         global parent_conn  
-        randnum, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = parent_conn.recv()
+        while parent_conn.poll(): #get last
+            randnum, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = parent_conn.recv()
         #controlData = parent_conn.recv()
         out = json.dumps({"temp" : randnum,
                           "mode" : mode,
@@ -282,7 +310,11 @@ class getstatus:
 
     def GET(self):
         global parent_conn
-        temp, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = parent_conn.recv()
+        #blocking receive
+        temp, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = parent_conn.recv() 
+        while parent_conn.poll(): #get last
+            temp, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = parent_conn.recv()
+            
         out = json.dumps({"temp" : temp,
                        "elapsed" : elapsed,
                           "mode" : mode,
@@ -304,12 +336,13 @@ def randomnum():
 
 def tempdata():
     #change 28-000002b2fa07 to your own temp sensor id
-    pipe = Popen(["cat","/sys/bus/w1/devices/w1_bus_master1/28-000002b2fa07/w1_slave"], stdout=PIPE)
+    #pipe = Popen(["cat","/sys/bus/w1/devices/w1_bus_master1/28-000002b2fa07/w1_slave"], stdout=PIPE)
+    pipe = Popen(["cat","/sys/bus/w1/devices/w1_bus_master1/28-0000037eb5c0/w1_slave"], stdout=PIPE)
     result = pipe.communicate()[0]
     result_list = result.split("=")
     temp_C = float(result_list[-1])/1000 # temp in Celcius
     temp_F = (9.0/5.0)*temp_C + 32
-    return "%.2f" % temp_F
+    return "%3.2f" % temp_F
 
 if __name__ == '__main__':
     

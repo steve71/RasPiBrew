@@ -42,85 +42,61 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 			// IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         
 			//declare globals
-        	var i, t, dataarray, options_temp, options_heat, plot, gaugeDisplay, newGaugeDisplay, mSlope
-        	i = 0
+        	var t, tempdataarray, heatdataarray, dutyCycle, options_temp, options_heat, plot, gaugeDisplay, newGaugeDisplay
+        	var capture_on = 1;
         	t = 0
         	
-        	function findLineByLeastSquares(in_pointArray) {
-        		//
-        		// Javascript Algorithm by DracoBlue
-        		// http://dracoblue.net/dev/linear-least-squares-in-javascript/159/
-        		// -Modified to accept array of points.
-        		//
-				var sum_x = 0;
-				var sum_y = 0;
-				var sum_xy = 0;
-				var sum_xx = 0;
-				var count = 0;
-				var values_x = [];
-				var values_y = [];
-				
-				var in_pointArrayLength = in_pointArray.length;
-				for (var i=0; i<in_pointArrayLength; i++) {
+        	function findMaxSlope(in_pointArray) {
+        		
+        		var i;		
+        		var values_x = [];
+        		var values_y = [];
+        		var in_pointArrayLength = in_pointArray.length;
+
+				for (i=0; i<in_pointArrayLength; i++) {
 					values_x.push(in_pointArray[i][0]);
 					values_y.push(in_pointArray[i][1]);
 				}
-				
-				/*
-				* We'll use those variables for faster read/write access.
-				*/
-				var x = 0;
-				var y = 0;
+								
 				var values_length = values_x.length;
 				
 				if (values_length != values_y.length) {
-					throw new Error('The parameters values_x and values_y need to have same size!');
+					throw new Error('x and y are not same size.');
+				}
+								
+				var maxslope = 0;
+				var slope = 0;
+				var b = 0;
+				var deadTime = 0;
+				var i_max = 0;
+
+				// find max slope
+				for (i = 1; i < values_length; i++) {
+					slope = (values_y[i]-values_y[i-1]) / (values_x[i]-values_x[i-1]);
+					if (slope > maxslope) {
+						maxslope = slope;
+						i_max = i;
+					}
 				}
 				
-				/*
-				* Nothing to do.
-				*/
-				if (values_length === 0) {
-					return [ [], [] ];
-				}
+				b = values_y[i_max] - maxslope*values_x[i_max];
+				deadTime = (values_y[0] - b) / maxslope;
 				
-				/*
-				* Calculate the sum for each of the parts necessary.
-				*/
-				for (var v = 0; v < values_length; v++) {
-					x = values_x[v];
-					y = values_y[v];
-					sum_x += x;
-					sum_y += y;
-					sum_xx += x*x;
-					sum_xy += x*y;
-					count++;
-				}
-				
-				/*
-				* Calculate m and b for the formular:
-				* y = x * m + b
-				*/
-				var m = (count*sum_xy - sum_x*sum_y) / (count*sum_xx - sum_x*sum_x);
-				var b = (sum_y/count) - (m*sum_x)/count;
-				
-				/*
-				* We will make the x and y result line now
-				*/
-				//var result_values_x = [];
-				//var result_values_y = [];
 				var out_pointArray = [];
-				
-				for (var v = 0; v < values_length; v++) {
-					x = values_x[v];
-					y = x * m + b;
-					out_pointArray.push([x,y]);
+
+				for (i = 0; i < values_length; i++) {
+					x = values_x[i];
+					if (x >= deadTime) {
+						y = x * maxslope + b;
+						out_pointArray.push([x,y]);
+					}
 					//result_values_x.push(x);
 					//result_values_y.push(y);
 				}
 
-				return [out_pointArray, m];
-			}
+				return [out_pointArray, deadTime, maxslope];
+        	}
+        	
 
             //long polling - wait for message
 		    function waitForMsg(){
@@ -141,6 +117,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		            	     jQuery('#modeResponse').html(data.mode);
 		            	     jQuery('#setpointResponse').html(data.set_point);
 		            	     jQuery('#dutycycleResponse').html(parseFloat(data.duty_cycle).toFixed(2));
+		            	     dutyCycle = data.duty_cycle;
 		            	     jQuery('#cycletimeResponse').html(data.cycle_time);
 		            	     jQuery('#k_paramResponse').html(data.k_param);
 		            	     jQuery('#i_paramResponse').html(data.i_param);
@@ -167,27 +144,44 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		            	     jQuery('#windowSizeText').change(function(){tempdataarray=[];heatdataarray=[];t = 0;});
 		            	     
 		            	     //i++;
-		            	     if (jQuery('input[name=LeastSquares]').is(':checked')) {
-		            	     	[fitData, mSlope] = findLineByLeastSquares(tempdataarray);
-		            	     	jQuery('#normSlope').html(mSlope/data.duty_cycle);
-		            	     	plot = jQuery.plot($$("#tempplot"), [ tempdataarray, fitData ], options_temp);
-		            	     }
-		            	     else {
-		            	     	jQuery('#normSlope').html("");
-		            	     	plot = jQuery.plot($$("#tempplot"), [ tempdataarray ], options_temp);
-		            	     }
-		            	     plot = jQuery.plot($$("#heatplot"), [ heatdataarray ], options_heat);
-		            	     //plot.setData([dataarray]);
-        					 //plot.draw();
-		            	     setTimeout(
-		                    	'waitForMsg()', 
-		                    	1 //in millisec
-		        			 );
+							 if (capture_on == 1) {
+			            	     plot = jQuery.plot($$("#tempplot"), [ tempdataarray ], options_temp);
+			            	     plot = jQuery.plot($$("#heatplot"), [ heatdataarray ], options_heat);
+			            	     //plot.setData([dataarray]);
+	        					 //plot.draw();	 
+		            	     	 setTimeout('waitForMsg()', 10); //in millisec
+		        			 }
 		            }
 		        });
 		        
 		    };
 		          jQuery(document).ready(function() {
+		          	
+		          		jQuery('#stop').click(function() {
+		          			capture_on = 0;
+		          		});
+		          		jQuery('#restart').click(function() {
+		          			capture_on = 1;
+		          			tempdataarray=[];
+		          			heatdataarray=[];
+		          			t = 0;
+		          			waitForMsg();
+		          		});
+		          		jQuery('#calcpid').click(function() {
+		          			var k_param, i_param, d_param, normalizedSlope, pointArray, maxSlope, deadTime;
+		          			capture_on = 0; //stop capture
+		          			[pointArray, deadTime, maxSlope] = findMaxSlope(tempdataarray);
+		          			normalizedSlope = maxSlope/jQuery('input:text[name=dutycycle]').val();
+		          			jQuery('#deadTime').html(deadTime);
+		          			jQuery('#normSlope').html(normalizedSlope);
+		          			plot = jQuery.plot($$("#tempplot"), [ tempdataarray, pointArray ], options_temp);
+		          			k_param = 1.2/(deadTime*normalizedSlope);
+		          			i_param = 2.0*deadTime;
+		          			d_param = 0.5*deadTime;
+		          			jQuery('#Kf_tune').html(k_param.toFixed(2).toString());
+		          			jQuery('#I_tune').html(i_param.toFixed(2).toString());
+		          			jQuery('#D_tune').html(d_param.toFixed(2).toString());
+		          		});
 		          		            
 			            jQuery('#controlPanelForm').submit(function() {
 			            	         	 	
@@ -259,16 +253,41 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		    	</div>
 	    	    <br/>
 	    		Window Size: <input id="windowSizeText" type="text" name="windowSize"  maxlength = "4" size ="4" value=10000 style="text-align: right;"/> 
-			<br><br>
-			<input type="checkbox" name="LeastSquares"/> Least Squares Fit<br />
 			<br>
+			<h4>Steps for PID Tuning:</h4>
+			<ol>
+				<li>Set to Manual Mode and 100% Duty Cycle</li>
+				<li>Wait for Temperature to increase by at least 10%</li>
+				<li>Turn Temp Controller off</li>
+				<li>Wait for Temperature to Start to Level Off</li>
+				<li>Press Calculate PID button to get Kf, I and D parameters</li>
+			</ol>
+			<button id = "stop">Stop Capture</button> 
+			<button id = "restart">Restart Capture  </button> 
+			<button id = "calcpid">Calculate PID</button> <br><br>
+			
+			Dead Time (secs): 
+			<span id = "deadTime">
+			</span><br>
 			Normalized Slope (a): 
 			<span id = "normSlope">
 			</span>
-			<br> <br>
-			Kf = 1.2 / (DeadTime * a)<br>
-			Ti = 2.0 * DeadTime<br>
-			Td = 0.5 * DeadTime<br>
+			
+			<table>
+	     		<tr>
+			        <td align=right>Kf: </td>
+			        <td id="Kf_tune" align=right>0</td>
+		        </tr>
+		        <tr>
+			        <td align=right>I: </td>
+			        <td id="I_tune" align=right>0</td>
+		        </tr>
+		        <tr>
+			        <td align=right>D: </td>
+			        <td id="D_tune" align=right>0</td>
+		        </tr>
+		    </table>
+			
 		    </div>
 	    </div>
 	    <div class="ControlResponse" style="float:left;">
@@ -337,7 +356,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		    			<td>&#176F</td>
 		    			<td align=right>Pid Kf parameter: </td> 
 	    		        <td>
-	    					<input type="text" name="p"  maxlength = "4" size ="4" value=$k_param style="text-align: right;"/> <br>
+	    					<input type="text" name="k"  maxlength = "4" size ="4" value=$k_param style="text-align: right;"/> <br>
 	    				</td>
 	    				<td>%/&#176F</td>
 	    			</tr>
