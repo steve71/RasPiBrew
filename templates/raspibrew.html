@@ -11,11 +11,13 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
         <link rel="stylesheet" type="text/css" href="/static/raspibrew.css" />
         
         <!--[if IE]><script type="text/javascript" src="excanvas.js"></script><![endif]-->
-		<script type="text/javascript" src="/static/gauge.js">			
+		<script type="text/javascript" src="../static/gauge.js">			
 		</script>
-        <script type="text/javascript" src="/static/jquery.js">   
+        <script type="text/javascript" src="../static/jquery.js">   
         </script>
         <script type="text/javascript" src="../static/jquery.flot.js">
+        </script>
+        <script type="text/javascript" src="../static/jquery.flot.selection.js">
         </script>
         
         <script type="text/javascript">
@@ -46,7 +48,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
         	var capture_on = 1;
         	t = 0
         	
-        	function findMaxSlope(in_pointArray) {
+        	function findLS(selected_start, selected_end, in_pointArray) {
         		
         		var i;		
         		var values_x = [];
@@ -64,37 +66,59 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 					throw new Error('x and y are not same size.');
 				}
 								
-				var maxslope = 0;
-				var slope = 0;
-				var b = 0;
-				var deadTime = 0;
-				var i_max = 0;
-
-				// find max slope
-				for (i = 1; i < values_length; i++) {
-					slope = (values_y[i]-values_y[i-1]) / (values_x[i]-values_x[i-1]);
-					if (slope > maxslope) {
-						maxslope = slope;
-						i_max = i;
+				if ((selected_start == 0) || (selected_end == 0)){
+					alert("Make a Selection");
+				} 				
+				// find indices	of selection			
+				var selection_start_index;
+				var selection_end_index;
+				var found_start = false;
+				for (i=0;i<values_length;i++) {
+					if ((values_x[i] >= selected_start) && (found_start == false)){
+						selection_start_index = i;
+						found_start = true;
 					}
+					if (values_x[i] <= selected_end){
+						selection_end_index = i;
+					}	
 				}
 				
-				b = values_y[i_max] - maxslope*values_x[i_max];
-				deadTime = (values_y[0] - b) / maxslope;
+				var sum_x = 0;
+				var sum_y = 0;
+				var sum_xy = 0;
+				var sum_xx = 0;
+				var count = 0;
+				var x = 0;
+				var y = 0;
+				/*
+				* Calculate the sum for each of the parts from imax to end
+				*/
+				for (i = selection_start_index; i <= selection_end_index; i++) {
+					x = values_x[i];
+					y = values_y[i];
+					sum_x += x;
+					sum_y += y;
+					sum_xx += x*x;
+					sum_xy += x*y;
+					count++;
+				}
 				
+				/*
+				* Calculate m and b for the formular:
+				* y = x * m + b
+				*/
+				var m = (count*sum_xy - sum_x*sum_y) / (count*sum_xx - sum_x*sum_x);
+				var b = (sum_y/count) - (m*sum_x)/count;
+								
 				var out_pointArray = [];
 
-				for (i = 0; i < values_length; i++) {
+				for (i = selection_start_index; i <= selection_end_index; i++) {
 					x = values_x[i];
-					if (x >= deadTime) {
-						y = x * maxslope + b;
-						out_pointArray.push([x,y]);
-					}
-					//result_values_x.push(x);
-					//result_values_y.push(y);
+					y = m * x + b;
+					out_pointArray.push([x,y]);
 				}
 
-				return [out_pointArray, deadTime, maxslope];
+				return [out_pointArray, m, b];
         	}
         	
 
@@ -149,7 +173,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 			            	     plot = jQuery.plot($$("#heatplot"), [ heatdataarray ], options_heat);
 			            	     //plot.setData([dataarray]);
 	        					 //plot.draw();	 
-		            	     	 setTimeout('waitForMsg()', 10); //in millisec
+		            	     	 setTimeout('waitForMsg()', 1); //in millisec
 		        			 }
 		            }
 		        });
@@ -167,11 +191,15 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		          			t = 0;
 		          			waitForMsg();
 		          		});
-		          		jQuery('#calcpid').click(function() {
-		          			var k_param, i_param, d_param, normalizedSlope, pointArray, maxSlope, deadTime;
-		          			capture_on = 0; //stop capture
-		          			[pointArray, deadTime, maxSlope] = findMaxSlope(tempdataarray);
-		          			normalizedSlope = maxSlope/jQuery('input:text[name=dutycycle]').val();
+		          		//jQuery('#calcpid').click(function() {		
+		          		//});
+		          		jQuery("#tempplot").bind("plotselected", function(event, ranges) {
+							var selected_start = ranges.xaxis.from;
+							var selected_end = ranges.xaxis.to;
+							var k_param, i_param, d_param, normalizedSlope, pointArray, m, b, deadTime;
+		          			[pointArray, m, b] = findLS(selected_start, selected_end, tempdataarray);
+		          			deadTime = pointArray[0][0];
+		          			normalizedSlope = m/jQuery('input:text[name=dutycycle]').val();
 		          			jQuery('#deadTime').html(deadTime);
 		          			jQuery('#normSlope').html(normalizedSlope);
 		          			plot = jQuery.plot($$("#tempplot"), [ tempdataarray, pointArray ], options_temp);
@@ -181,7 +209,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		          			jQuery('#Kf_tune').html(k_param.toFixed(2).toString());
 		          			jQuery('#I_tune').html(i_param.toFixed(2).toString());
 		          			jQuery('#D_tune').html(d_param.toFixed(2).toString());
-		          		});
+						});
 		          		            
 			            jQuery('#controlPanelForm').submit(function() {
 			            	         	 	
@@ -194,9 +222,11 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
                                 },
                              });
                              //reset plot
-                             tempdataarray=[];
-                             heatdataarray=[];
-                             t = 0;
+                             if (jQuery('#off').is(':checked') == false) {
+	                             tempdataarray=[];
+	                             heatdataarray=[];
+	                             t = 0;
+                             }
 						     return false;
 						});
 						
@@ -224,17 +254,33 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		          		i = 0;
 		          		tempdataarray = []; 
 		          		heatdataarray = []; 
+		          		
 		          		options_temp = {
-						  series: { shadowSize: 0 }, 
+						  series: {
+						  	  lines: {show: true},
+						  	  //points: {show: true}, 
+						  	  shadowSize: 0 
+						  }, 
 						  yaxis: { min: null, max: null },
-						  xaxis: { show: true }
-						}; 
-						options_heat = {
-						  series: { shadowSize: 0 }, 
-						  yaxis: { min: 0, max: 100 },
-						  xaxis: { show: true }
+						  xaxis: { show: true },
+						  //grid: {
+			              //  hoverable: true,
+			              //  clickable: true
+			              //},
+						  selection: { mode: "x" }
 						}; 
 						
+						options_heat = {
+						  series: {
+						  	  lines: {show: true},
+						  	  //points: {show: true}, 
+						  	  shadowSize: 0 
+						  }, 
+						  yaxis: { min: 0, max: 100 },
+						  xaxis: { show: true },
+						  selection: { mode: "x" }
+						}; 
+
 	         			waitForMsg();
      
                      });
@@ -258,13 +304,13 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 			<ol>
 				<li>Set to Manual Mode and 100% Duty Cycle</li>
 				<li>Wait for Temperature to increase by at least 10%</li>
-				<li>Turn Temp Controller off</li>
-				<li>Wait for Temperature to Start to Level Off</li>
-				<li>Press Calculate PID button to get Kf, I and D parameters</li>
+				<li>Turn Temp Controller off and Stop data capture</li>
+				<li>Highlight Sloped Line after Dead Time on Plot</li>
 			</ol>
 			<button id = "stop">Stop Capture</button> 
 			<button id = "restart">Restart Capture  </button> 
-			<button id = "calcpid">Calculate PID</button> <br><br>
+			<!-- <button id = "calcpid">Calculate PID</button> -->
+			<br><br>
 			
 			Dead Time (secs): 
 			<span id = "deadTime">

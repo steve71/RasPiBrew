@@ -48,9 +48,9 @@ class raspibrew:
         self.cycle_time = 2.0
         self.duty_cycle = 0.0
         self.set_point = 0.0
-        self.k_param = 2.39
-        self.i_param = 489
-        self.d_param = 44.9
+        self.k_param = 43.78
+        self.i_param = 66.52
+        self.d_param = 16.63
         
         if runonce:
             parent_conn, child_conn = Pipe()       
