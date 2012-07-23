@@ -19,7 +19,7 @@ The PID algorithm was translated from C code to Python.  The C code was from "PI
 An explanation on how to tune it is from the following web site:
 http://www.vandelogt.nl/htm/regelen_pid_uk.htm.  
 
-Hardware used to test so far: Raspberry Pi, Jeelabs Output Plug (I2C), 1-wire DS18B20 digital thermometer, 4.7k resistor, 1k resistor and an LED.  For wireless a Belkin USB wifi dongle is used.
+Electronics used to test: Raspberry Pi, Raspberry Pi Plate kit from Adafruit, Jeelabs Output Plug (I2C), 1-wire DS18B20 digital thermometer, 4.7k resistor, 1k resistor and an LED.  For wireless a Belkin USB wifi dongle is used.
 
 Information on Raspberry Pi low-level peripherals:
 http://elinux.org/RPi_Low-level_peripherals
