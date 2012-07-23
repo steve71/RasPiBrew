@@ -1,4 +1,4 @@
-Summary: A wireless and inexpensive Rasberry Pi web-controlled brewery 
+Summary: A wireless and inexpensive Raspberry Pi web-controlled brewery 
 
 Status: Current focus is controlling an electric heating element in a brew kettle to set temperatures and regulate boil.  The user can set the duty cycle (manual mode) to control the length of time a heating element stays on over the cycle time.  While this is happening, all status included temperature is sent back approx. every second.  The duty cycle and temperature is plotted over time and temperature is also displayed on a gauge.  A PID algorithm has been implemented to automatically control the heating element when the desired temperature is set.
 
