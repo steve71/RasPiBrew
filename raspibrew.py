@@ -25,7 +25,8 @@ from subprocess import Popen, PIPE, call
 from datetime import datetime
 import web, time, random, json, serial
 from smbus import SMBus
-from pid import pid as PIDController
+#from pid import pid as PIDController
+from pid import pidpy as PIDController
 
 
 urls = ("/", "raspibrew",
@@ -48,9 +49,9 @@ class raspibrew:
         self.cycle_time = 2.0
         self.duty_cycle = 0.0
         self.set_point = 0.0
-        self.k_param = 43.78
-        self.i_param = 66.52
-        self.d_param = 16.63
+        self.k_param = 8.86
+        self.i_param = 149.04
+        self.d_param = 37.26
         
         if runonce:
             parent_conn, child_conn = Pipe()       
@@ -154,7 +155,7 @@ def heatProc(cycle_time, duty_cycle, conn):
     while (True):
         while (conn.poll()): #get last
             cycle_time, duty_cycle = conn.recv()
-        conn.send([cycle_time, duty_cycle])    
+        conn.send([cycle_time, duty_cycle])  
         if duty_cycle == 0:
             bus.write_byte_data(0x26,0x09,0x00)
             time.sleep(cycle_time)
@@ -225,30 +226,33 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
         while (True):
             readytemp = False
             while parent_conn_temp.poll():
-                temp, elapsed = parent_conn_temp.recv() #non blocking receive    
+                temp_C, elapsed = parent_conn_temp.recv() #non blocking receive    
+                temp_F = (9.0/5.0)*temp_C + 32
+                temp_C_str = "%3.2f" % temp_C
+                temp_F_str = "%3.2f" % temp_F
                 ser.write("?y1?x05")
-                ser.write(temp)
+                ser.write(temp_F_str)
                 #ser.write("?y1?x10")
                 ser.write("?D70609090600000000") #degree symbol
                 ser.write("?7F   ") #degree F
                 readytemp = True
             if readytemp == True:
-                conn.send([temp, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param]) #GET request
-                readytemp == False
-            readyheat = False    
+                if mode == "auto":
+                    #calculate PID every cycle - alwyas get latest temp
+                    #duty_cycle = pid.calcPID(float(temp), set_point, True)
+                    #set_point_C = (5.0/9.0)*(set_point - 32)
+                    duty_cycle = pid.calcPID_reg4(temp_F, set_point, True)
+                    #send to heat process every cycle
+                    parent_conn_heat.send([cycle_time, duty_cycle])   
+                conn.send([temp_F_str, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param]) #GET request
+                readytemp == False   
+                
             while parent_conn_heat.poll(): #non blocking receive
                 cycle_time, duty_cycle = parent_conn_heat.recv()
                 ser.write("?y2?x00Duty: ")
                 ser.write("%3.1f" % duty_cycle)
-                ser.write("%     ")
-                readyheat = True
-            if readyheat == True:
-                if mode == "auto":
-                    #calculate PID every cycle
-                    duty_cycle = pid.calcPID(float(temp), float(set_point), 1)
-                    #send to heat process every cycle
-                    parent_conn_heat.send([cycle_time, duty_cycle])     
-                    readyheat = False     
+                ser.write("%     ")    
+                     
             readyPOST = False
             while conn.poll(): #POST settings
                 mode, cycle_time, duty_cycle_temp, set_point, k_param, i_param, d_param = conn.recv()
@@ -262,8 +266,11 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
                     ser.write("?D70609090600000000") #degree symbol
                     ser.write("?7F   ") #degree F
                     print "auto selected"
-                    pid = PIDController.PID(cycle_time, k_param, i_param, d_param) #init pid
-                    duty_cycle = pid.calcPID(float(temp), float(set_point), 1)
+                    #pid = PIDController.PID(cycle_time, k_param, i_param, d_param) #init pid
+                    #duty_cycle = pid.calcPID(float(temp), set_point, True)
+                    pid = PIDController.pidpy(cycle_time, k_param, i_param, d_param) #init pid
+                    #set_point_C = (5.0/9.0)*(set_point - 32)
+                    duty_cycle = pid.calcPID_reg4(temp_F, set_point, True)
                     parent_conn_heat.send([cycle_time, duty_cycle])  
                 if mode == "manual": 
                     ser.write("?y0?x00Manual Mode     ")
@@ -341,8 +348,9 @@ def tempdata():
     result = pipe.communicate()[0]
     result_list = result.split("=")
     temp_C = float(result_list[-1])/1000 # temp in Celcius
-    temp_F = (9.0/5.0)*temp_C + 32
-    return "%3.2f" % temp_F
+    #temp_F = (9.0/5.0)*temp_C + 32
+    #return "%3.2f" % temp_C
+    return temp_C
 
 if __name__ == '__main__':
     

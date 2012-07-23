@@ -44,8 +44,9 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 			// IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         
 			//declare globals
-        	var t, tempdataarray, heatdataarray, dutyCycle, options_temp, options_heat, plot, gaugeDisplay, newGaugeDisplay
+        	var t, tempdataarray, heatdataarray, setpointdataarray, dutyCycle, options_temp, options_heat, plot, gaugeDisplay, newGaugeDisplay
         	var capture_on = 1;
+        	var temp_C, temp_F, setpoint_C
         	t = 0
         	
         	function findLS(selected_start, selected_end, in_pointArray) {
@@ -136,8 +137,13 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		            success: function(data){  
 		            	 
 		            	     //alert(data.mode);
- 
+		            	     //temp_F = (9.0/5.0)*parseFloat(data.temp) + 32;
+		            	     //temp_F = temp_F.toFixed(2);
+		            	     temp_C = (5.0/9.0)*(parseFloat(data.temp) - 32);
+		            	     temp_C = temp_C.toFixed(2);
+		            	     
 		            	     jQuery('#tempResponse').html(data.temp);
+		            	     jQuery('#tempResponse_C').html(temp_C)
 		            	     jQuery('#modeResponse').html(data.mode);
 		            	     jQuery('#setpointResponse').html(data.set_point);
 		            	     jQuery('#dutycycleResponse').html(parseFloat(data.duty_cycle).toFixed(2));
@@ -146,12 +152,20 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		            	     jQuery('#k_paramResponse').html(data.k_param);
 		            	     jQuery('#i_paramResponse').html(data.i_param);
 		            	     jQuery('#d_paramResponse').html(data.d_param);
-     
+		            	     
 		            	     gaugeDisplay.setValue(parseFloat(data.temp));
+		            	     
+		            	     if (data.mode == "auto") {
+		            	     	//setpoint_C = (5.0/9.0)*(parseFloat(data.set_point) - 32);
+							 	setpointdataarray.push([t, parseFloat(data.set_point)]);
+							 }
+							 else {
+							 	setpointdataarray = [];
+							 }
 		            	     
 		            	     tempdataarray.push([t,parseFloat(data.temp)]);
 		            	     heatdataarray.push([t,parseFloat(data.duty_cycle)]);
-		            	     
+		            	     	            	      	
 		            	     //tempdataarray.push([i,parseFloat(data.temp)]);
 		            	     //heatdataarray.push([i,parseFloat(data.duty_cycle)]);
 		            	              	     
@@ -169,7 +183,12 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		            	     
 		            	     //i++;
 							 if (capture_on == 1) {
-			            	     plot = jQuery.plot($$("#tempplot"), [ tempdataarray ], options_temp);
+							 	 if (data.mode == "auto") {
+		            	     	    plot = jQuery.plot($$("#tempplot"), [ tempdataarray, setpointdataarray ], options_temp);
+		            	     	 }
+			            	     else {
+			            	     	plot = jQuery.plot($$("#tempplot"), [ tempdataarray ], options_temp);
+			            	     }
 			            	     plot = jQuery.plot($$("#heatplot"), [ heatdataarray ], options_heat);
 			            	     //plot.setData([dataarray]);
 	        					 //plot.draw();	 
@@ -206,7 +225,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		          			k_param = 1.2/(deadTime*normalizedSlope);
 		          			i_param = 2.0*deadTime;
 		          			d_param = 0.5*deadTime;
-		          			jQuery('#Kf_tune').html(k_param.toFixed(2).toString());
+		          			jQuery('#Kc_tune').html(k_param.toFixed(2).toString());
 		          			jQuery('#I_tune').html(i_param.toFixed(2).toString());
 		          			jQuery('#D_tune').html(d_param.toFixed(2).toString());
 						});
@@ -225,6 +244,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
                              if (jQuery('#off').is(':checked') == false) {
 	                             tempdataarray=[];
 	                             heatdataarray=[];
+	                             setpointdataarray = [];
 	                             t = 0;
                              }
 						     return false;
@@ -291,7 +311,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
     <body>
     	<div class="ControlResponse" id="tempheatplots" style="float:right;">
 	    	<div class="tempdata"> 
-	    		<p class="plottitle">Temperature Plot </p>
+	    		<p class="plottitle">Temperature Plot</p>
 		    	<div id="tempplot" align=left  style="width:600px;height:200px;">
 		    	</div>
 		    	<p class="plottitle">Heat Plot </p>
@@ -321,8 +341,8 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 			
 			<table>
 	     		<tr>
-			        <td align=right>Kf: </td>
-			        <td id="Kf_tune" align=right>0</td>
+			        <td align=right>Kc: </td>
+			        <td id="Kc_tune" align=right>0</td>
 		        </tr>
 		        <tr>
 			        <td align=right>I: </td>
@@ -344,9 +364,12 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 	    	<p align=center style="font-size: large;text-decoration: underline;">Current Status</p> 
 	     	<table>
 	     		<tr>
-			        <td align=right>Temperature: </td>
+			        <td align=right>Temperature(F): </td>
 			        <td id="tempResponse" align=right>temp</td>
 			        <td>&#176F</td> 
+			        <td align=right>Temperature(C): </td>
+			        <td id="tempResponse_C" align=right>temp</td>
+			        <td>&#176C</td> 
 		        </tr>
 		        <tr>
 			        <td align=right>Mode: </td>
@@ -356,9 +379,9 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		    		<td align=right>Set Point: </td>
 		    		<td id="setpointResponse" align=right>0</td>
 		    		<td>&#176F</td>    	
-		    		<td align=right>PID Kf parameter </td> 
+		    		<td align=right>PID Kc parameter </td> 
 		    		<td id="k_paramResponse">0</td>
-		    		<td>%/&#176F</td>
+		    		<td>%/&#176C</td>
 	    		<tr>
 	    			<td align=right>Duty Cycle: </td>
 	    			<td id="dutycycleResponse" align=right>50</td>	
@@ -400,11 +423,11 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		    				<input type="text" name="setpoint"  maxlength = "4" size ="4" value=$set_point style="text-align: right;"/> 
 		    			</td>
 		    			<td>&#176F</td>
-		    			<td align=right>Pid Kf parameter: </td> 
+		    			<td align=right>Pid Kc parameter: </td> 
 	    		        <td>
 	    					<input type="text" name="k"  maxlength = "4" size ="4" value=$k_param style="text-align: right;"/> <br>
 	    				</td>
-	    				<td>%/&#176F</td>
+	    				<td>%/&#176C</td>
 	    			</tr>
 	    			<tr>
 	    				<td align=right>Duty Cycle: </td>
