@@ -29,46 +29,43 @@ from smbus import SMBus
 from pid import pidpy as PIDController
 
 
-urls = ("/", "raspibrew",
-        "/getrand", "getrand",
-        "/getstatus", "getstatus")
+class param:
+    mode = "off"
+    cycle_time = 2.0
+    duty_cycle = 0.0
+    set_point = 0.0
+    k_param = 43.78
+    i_param = 66.52
+    d_param = 16.63
 
-render = web.template.render("templates/")
 
-app = web.application(urls, globals())
-
-global parent_conn, runonce
-runonce = True
+def add_global_hook(parent_conn):
+    
+    g = web.storage({"parent_conn": parent_conn})
+    def _wrapper(handler):
+        web.ctx.globals = g
+        return handler()
+    return _wrapper
+            
 
 class raspibrew: 
     def __init__(self):
+                
+        self.mode = param.mode
+        self.cycle_time = param.cycle_time
+        self.duty_cycle = param.duty_cycle
+        self.set_point = param.set_point
+        self.k_param = param.k_param
+        self.i_param = param.i_param
+        self.d_param = param.d_param
         
-        global parent_conn, runonce
         
-        self.mode = "off"
-        self.cycle_time = 2.0
-        self.duty_cycle = 0.0
-        self.set_point = 0.0
-        self.k_param = 8.86
-        self.i_param = 149.04
-        self.d_param = 37.26
-        
-        if runonce:
-            parent_conn, child_conn = Pipe()       
-            #rename to tempControlProc to test with raspberry pi    
-            p = Process(name = "tempControlProc", target=tempControlProc, args=(self.mode, self.cycle_time, self.duty_cycle, \
-                                                          self.set_point, self.k_param, self.i_param, self.d_param, \
-                                                          child_conn))
-            p.start()
-            runonce = False
-
     def GET(self):
        
         return render.raspibrew(self.mode, self.set_point, self.duty_cycle, self.cycle_time, \
                                 self.k_param,self.i_param,self.d_param)
         
     def POST(self):
-        global parent_conn
         data = web.data()
         #print data
         datalist = data.split("&")
@@ -88,18 +85,10 @@ class raspibrew:
                 self.i_param = float(datalistkey[1])
             if datalistkey[0] == "d":
                 self.d_param = float(datalistkey[1])
-            
-        parent_conn.send([self.mode, self.cycle_time, self.duty_cycle, self.set_point, \
+         
+        web.ctx.globals.parent_conn.send([self.mode, self.cycle_time, self.duty_cycle, self.set_point, \
                               self.k_param, self.i_param, self.d_param])  
              
-            #mode, cycle_time, duty_cycle = parent_conn.recv()
-            
-            #print mode
-            #print cycle_time
-            #print duty_cycle
-               
-        #return render.raspibrew(self.mode,self.set_point, self.duty_cycle, self.cycle_time, \
-        #                        self.k_param,self.i_param,self.d_param)
  
 def getrandProc(conn):
     p = current_process()
@@ -223,11 +212,34 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
         ser.write("?y1?x00HLT:")
         ser.write("?y3?x00Heat: off      ")
         
+        temp_F_ma_list = []
+        temp_F_ma = 0.0
+        
         while (True):
             readytemp = False
             while parent_conn_temp.poll():
                 temp_C, elapsed = parent_conn_temp.recv() #non blocking receive    
                 temp_F = (9.0/5.0)*temp_C + 32
+                
+                temp_F_ma_list.append(temp_F) 
+                
+                #print temp_F_ma_list
+                #smooth temp data
+                #
+                if (len(temp_F_ma_list) == 1):
+                    temp_F_ma = temp_F_ma_list[0]
+                elif (len(temp_F_ma_list) == 2):
+                    temp_F_ma = (temp_F_ma_list[0] + temp_F_ma_list[1]) / 2.0
+                elif (len(temp_F_ma_list) == 3):
+                    temp_F_ma = (temp_F_ma_list[0] + temp_F_ma_list[1] + temp_F_ma_list[2]) / 3.0
+                elif (len(temp_F_ma_list) == 4):
+                    temp_F_ma = (temp_F_ma_list[0] + temp_F_ma_list[1] + temp_F_ma_list[2] + temp_F_ma_list[3]) / 4.0
+                else:    
+                    temp_F_ma = (temp_F_ma_list[0] + temp_F_ma_list[1] + temp_F_ma_list[2] + temp_F_ma_list[3] + \
+                                                                                            temp_F_ma_list[4]) / 5.0
+                    temp_F_ma_list.pop(0) #remove oldest element in list
+                    #print "Temp F MA %.2f" % temp_F_ma
+                
                 temp_C_str = "%3.2f" % temp_C
                 temp_F_str = "%3.2f" % temp_F
                 ser.write("?y1?x05")
@@ -241,7 +253,8 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
                     #calculate PID every cycle - alwyas get latest temp
                     #duty_cycle = pid.calcPID(float(temp), set_point, True)
                     #set_point_C = (5.0/9.0)*(set_point - 32)
-                    duty_cycle = pid.calcPID_reg4(temp_F, set_point, True)
+                    print "Temp F MA %.2f" % temp_F_ma
+                    duty_cycle = pid.calcPID_reg4(temp_F_ma, set_point, True)
                     #send to heat process every cycle
                     parent_conn_heat.send([cycle_time, duty_cycle])   
                 conn.send([temp_F_str, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param]) #GET request
@@ -270,7 +283,7 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
                     #duty_cycle = pid.calcPID(float(temp), set_point, True)
                     pid = PIDController.pidpy(cycle_time, k_param, i_param, d_param) #init pid
                     #set_point_C = (5.0/9.0)*(set_point - 32)
-                    duty_cycle = pid.calcPID_reg4(temp_F, set_point, True)
+                    duty_cycle = pid.calcPID_reg4(temp_F_ma, set_point, True)
                     parent_conn_heat.send([cycle_time, duty_cycle])  
                 if mode == "manual": 
                     ser.write("?y0?x00Manual Mode     ")
@@ -293,7 +306,7 @@ class getrand:
     def __init__(self):
         pass
     def GET(self):
-        global parent_conn  
+        #global parent_conn  
         while parent_conn.poll(): #get last
             randnum, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = parent_conn.recv()
         #controlData = parent_conn.recv()
@@ -312,15 +325,16 @@ class getrand:
         pass
 
 class getstatus:
+    
     def __init__(self):
         pass    
 
     def GET(self):
-        global parent_conn
         #blocking receive
-        temp, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = parent_conn.recv() 
-        while parent_conn.poll(): #get last
-            temp, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = parent_conn.recv()
+ 
+        temp, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = web.ctx.globals.parent_conn.recv() 
+        while web.ctx.globals.parent_conn.poll(): #get last
+            temp, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = web.ctx.globals.parent_conn.recv()
             
         out = json.dumps({"temp" : temp,
                        "elapsed" : elapsed,
@@ -353,10 +367,26 @@ def tempdata():
     return temp_C
 
 if __name__ == '__main__':
-    
-    #uncomment for raspberry pi
+     
     call(["modprobe", "w1-gpio"])
     call(["modprobe", "i2c-dev"])
+    
+    urls = ("/", "raspibrew",
+        "/getrand", "getrand",
+        "/getstatus", "getstatus")
+
+    render = web.template.render("/var/www/templates/")
+
+    app = web.application(urls, globals()) 
+    
+    parent_conn, child_conn = Pipe()       
+    p = Process(name = "tempControlProc", target=tempControlProc, args=(param.mode, param.cycle_time, param.duty_cycle, \
+                                                              param.set_point, param.k_param, param.i_param, param.d_param, \
+                                                              child_conn))
+    p.start()
+    
+    app.add_processor(add_global_hook(parent_conn))
+     
     app.run()
 
 

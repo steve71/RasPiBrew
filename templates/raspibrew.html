@@ -122,7 +122,20 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 				return [out_pointArray, m, b];
         	}
         	
-
+        	function showTooltip(x, y, contents) {
+		        jQuery('<div id="tooltip">' + contents + '</div>').css( {
+		            position: 'absolute',
+		            display: 'none',
+		            top: y + 5,
+		            left: x + 5,
+		            border: '1px solid #fdd',
+		            padding: '2px',
+		            'background-color': '#fee',
+		            opacity: 0.80
+		    	}).appendTo("body").fadeIn(200);
+		    }
+        	
+        		
             //long polling - wait for message
 		    function waitForMsg(){
 		       
@@ -229,6 +242,28 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		          			jQuery('#I_tune').html(i_param.toFixed(2).toString());
 		          			jQuery('#D_tune').html(d_param.toFixed(2).toString());
 						});
+						
+						var previousPoint = null;
+					    jQuery("#tempplot").bind("plothover", function (event, pos, item) {	
+					    	if (item) {
+					        	if (previousPoint != item.dataIndex) {
+					            	previousPoint = item.dataIndex;
+					                    
+					                jQuery("#tooltip").remove();
+					                var x = item.datapoint[0].toFixed(2),
+                        				y = item.datapoint[1].toFixed(2);
+					                    
+					                showTooltip(item.pageX, item.pageY,
+					                            "(" + x + ", " + y + ")");
+					                }
+					            }
+					        else {
+					            jQuery("#tooltip").remove();
+					            previousPoint = null;            
+					        }
+					        
+					    });
+					    
 		          		            
 			            jQuery('#controlPanelForm').submit(function() {
 			            	         	 	
@@ -283,10 +318,10 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 						  }, 
 						  yaxis: { min: null, max: null },
 						  xaxis: { show: true },
-						  //grid: {
-			              //  hoverable: true,
+						  grid: {
+			                hoverable: true
 			              //  clickable: true
-			              //},
+			              },
 						  selection: { mode: "x" }
 						}; 
 						
@@ -318,7 +353,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		    	<div id="heatplot" align=left  style="width:600px;height:200px;">
 		    	</div>
 	    	    <br/>
-	    		Window Size: <input id="windowSizeText" type="text" name="windowSize"  maxlength = "4" size ="4" value=10000 style="text-align: right;"/> 
+	    		Window Size: <input id="windowSizeText" type="text" name="windowSize"  maxlength = "6" size ="6" value=1000000 style="text-align: right;"/> 
 			<br>
 			<h4>Steps for PID Tuning:</h4>
 			<ol>
@@ -425,7 +460,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		    			<td>&#176F</td>
 		    			<td align=right>Pid Kc parameter: </td> 
 	    		        <td>
-	    					<input type="text" name="k"  maxlength = "4" size ="4" value=$k_param style="text-align: right;"/> <br>
+	    					<input type="text" name="k"  maxlength = "6" size ="6" value=$k_param style="text-align: right;"/> <br>
 	    				</td>
 	    				<td>%/&#176C</td>
 	    			</tr>
@@ -437,7 +472,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 	    				<td>%</td>
 	    				<td align=right>PID Ti parameter: </td> 
 	    		        <td>
-	    					<input type="text" name="i"  maxlength = "4" size ="4" value=$i_param style="text-align: right;"/> <br>
+	    					<input type="text" name="i"  maxlength = "6" size ="6" value=$i_param style="text-align: right;"/> <br>
 	    				</td>
 	    				<td>secs</td>
 	    			</tr>
@@ -449,7 +484,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 	    			   <td style="width:50px">secs</td>
 	    			   <td align=right>PID Td parameter:</td> 
 	    		        <td>
-	    					<input type="text" name="d"  maxlength = "4" size ="4" value=$d_param style="text-align: right;"/> 
+	    					<input type="text" name="d"  maxlength = "6" size ="6" value=$d_param style="text-align: right;"/> 
 	    				</td>
 	    				<td>secs</td>
 	    			</tr>
