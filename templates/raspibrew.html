@@ -355,7 +355,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 	    	    <br/>
 	    		Window Size: <input id="windowSizeText" type="text" name="windowSize"  maxlength = "6" size ="6" value=1000000 style="text-align: right;"/> 
 			<br>
-			<h4>Steps for PID Tuning:</h4>
+			<h4>Steps for PID Tuning (Ziegler-Nichols Open-Loop):</h4>
 			<ol>
 				<li>Set to Manual Mode and 100% Duty Cycle</li>
 				<li>Wait for Temperature to increase by at least 10%</li>
@@ -416,7 +416,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		    		<td>&#176F</td>    	
 		    		<td align=right>PID Kc parameter </td> 
 		    		<td id="k_paramResponse">0</td>
-		    		<td>%/&#176C</td>
+		    		<td>%/&#176F</td>
 	    		<tr>
 	    			<td align=right>Duty Cycle: </td>
 	    			<td id="dutycycleResponse" align=right>50</td>	
@@ -462,7 +462,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 	    		        <td>
 	    					<input type="text" name="k"  maxlength = "6" size ="6" value=$k_param style="text-align: right;"/> <br>
 	    				</td>
-	    				<td>%/&#176C</td>
+	    				<td>%/&#176F</td>
 	    			</tr>
 	    			<tr>
 	    				<td align=right>Duty Cycle: </td>
