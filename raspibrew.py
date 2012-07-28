@@ -34,9 +34,9 @@ class param:
     cycle_time = 2.0
     duty_cycle = 0.0
     set_point = 0.0
-    k_param = 43.78
+    k_param = 44
     i_param = 140
-    d_param = 5
+    d_param = 8
 
 
 def add_global_hook(parent_conn):
