@@ -35,7 +35,7 @@ The language for the server side software is Python for rapid development.  The 
 
 On the client side jQuery and various plugins can be used to display data such as line charts and gauges. Mouse overs on the temperature plot will show the time and temp for the individual points.  It is currently working in a Firefox Browser.   
 
-jQuery and two jQuery plugins (jsGauge and FLot) are used in the client:  
+jQuery and two jQuery plugins (jsGauge and Flot) are used in the client:  
 [http://jquery.com](http://jquery.com "jQuery")  
 [http://code.google.com/p/jsgauge/](http://code.google.com/p/jsgauge/ "jsgauge")  
 [http://code.google.com/p/flot/](http://code.google.com/p/flot/ "flot")  
