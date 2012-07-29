@@ -18,7 +18,7 @@ The heat plot shows duty cycle percentage over time in seconds.
 
 ## Hardware
 
-A $35 credit card sized raspberry pi computer is an inexpensive and very expandable solution to controlling a brewery.  Here it is only used for temperature control of one vessel.  Used in combination with a jeelabs i2c output plug to control relays, 1-wire temperature sensors and a cheap usb wifi dongle a wirelessly controlled temperature controller can be developed.  The Raspberry Pi can run a web server to communicate the data to a browser or application on a computer or smartphone.
+A $35 credit card sized raspberry pi computer is an inexpensive and very expandable solution to controlling a home brewery.  Here it is used for temperature control of one vessel.  Used in combination with a jeelabs i2c output plug to control relays, 1-wire temperature sensors and a cheap usb wifi dongle a wirelessly controlled temperature controller can be developed.  The Raspberry Pi can run a web server to communicate the data to a browser or application on a computer or smartphone.
 
 Electronics used to test: Raspberry Pi, Raspberry Pi Plate kit from Adafruit, Jeelabs Output Plug (I2C), 1-wire DS18B20 digital thermometer, 20 x 4 LCD and LCD117 Kit (serial interface), 4.7k resistor, 1k resistor and an LED.  The output plug directly controls a solid state relay (ssr) which connects to a heating element.  For wireless a Belkin USB wifi dongle is used.
 
