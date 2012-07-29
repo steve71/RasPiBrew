@@ -48,7 +48,7 @@ The PID can be tuned very simply via the Ziegler-Nichols open loop method.  Just
 
 ## Smartphone Control
 
-A practical way of monitoring the system is using an android app.  An existing app that I created for a temperature controller was modified to work with the web interface.  
+A useful way of monitoring the system is using an android app.  An existing app that I created for a temperature controller was modified to work with this web interface.  
 <img src="https://github.com/steve71/RasPiBrew/raw/master/img/android1.jpg" alt="" width="470 height="238" />
 <img src="https://github.com/steve71/RasPiBrew/raw/master/img/android2.jpg" alt="" width="470 height="238" />
 <img src="https://github.com/steve71/RasPiBrew/raw/master/img/android3.jpg" alt="" width="470 height="238" />
