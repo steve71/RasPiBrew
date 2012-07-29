@@ -44,11 +44,11 @@ The PID algorithm was translated from C code to Python.  The C code was from "PI
 An explanation on how to tune it is from the following web site:  
 [http://www.vandelogt.nl/htm/regelen_pid_uk.htm](http://www.vandelogt.nl/htm/regelen_pid_uk.htm)  
 
-The PID can be tuned very simply via the Ziegler-Nichols open loop method.  Just follow the directions in the controller interface screen, highlight the sloped line in the temperature plot and the parameters are automatically calculated.  The parameters, after tuning with the Ziegler-Nichols method, still needed adjustment for it to work well because there was an overshoot of about 2 degrees in my system. I did not want the temperature to go past the setpoint since it takes a long time to come back down. Therefore, I adjusted the parameters to eliminate the overshoot.  For my system I had to more than double the Ti term and about a 1/4 of the calculated Td parameter.  The ITAE method would provide the best results as described on van de Logt's website.
+The PID can be tuned very simply via the Ziegler-Nichols open loop method.  Just follow the directions in the controller interface screen, highlight the sloped line in the temperature plot and the parameters are automatically calculated.  After tuning with the Ziegler-Nichols method the parameters still needed adjustment because there was an overshoot of about 2 degrees in my system. I did not want the temperature to go past the setpoint since it takes a long time to come back down. Therefore, the parameters were adjusted to eliminate the overshoot.  For this particular system the Ti term was more than doubled and the Td parameter was set to a quarter of the open loop calculated value.  The ITAE method would provide the best results as described on van de Logt's website.
 
 ## Smartphone Control
 
-A useful way of controlling and monitoring the system is using an android app.  An existing app that I created for a temperature controller was modified to work with this web interface.  
+A useful way of controlling and monitoring the system is using an android app.  An existing app that was created for a temperature controller was modified to work with this web interface.  
   
 <img src="https://github.com/steve71/RasPiBrew/raw/master/img/android1.jpg" alt="" width="470 height="238" />
 <img src="https://github.com/steve71/RasPiBrew/raw/master/img/android2.jpg" alt="" width="470 height="238" />
