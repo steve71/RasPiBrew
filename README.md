@@ -13,8 +13,8 @@ This program will control an electric heating element in a vessel to set tempera
 ## After Setting the Temperature Controller to 150 deg F:
 
 ![](https://github.com/steve71/RasPiBrew/raw/master/img/PID_Temp_Control.png)  
-The temp plot shows temperature in def F over time in seconds.  
-The heat plot shows duty cycle % over time in seconds.
+The temp plot shows temperature in degrees F over time in seconds.  
+The heat plot shows duty cycle percentage over time in seconds.
 
 ## Hardware
 
