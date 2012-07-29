@@ -46,4 +46,11 @@ An explanation on how to tune it is from the following web site:
 
 The PID can be tuned very simply via the Ziegler-Nichols open loop method.  Just follow the directions in the controller interface screen, highlight the sloped line in the temperature plot and the parameters are automatically calculated.  The parameters after tuning with the Ziegler-Nichols method still needed adjustment for it to work well because there was an overshoot of about 2 degrees in my system. I did not want the temperature to go past the setpoint and adjusted the parameters to eliminate the overshoot.  The ITAE method would provide the best results. 
 
+## Smartphone Control
+
+A practical way of monitoring the system is using an android app.  An existing app that I created for a temperature controller was modified to work with the web interface.  
+<img src="https://github.com/steve71/RasPiBrew/raw/master/img/android1.jpg" alt="" width="470 height="238" />
+<img src="https://github.com/steve71/RasPiBrew/raw/master/img/android2.jpg" alt="" width="470 height="238" />
+<img src="https://github.com/steve71/RasPiBrew/raw/master/img/android3.jpg" alt="" width="470 height="238" />
+
 
