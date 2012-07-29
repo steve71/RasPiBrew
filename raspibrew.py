@@ -23,7 +23,7 @@
 from multiprocessing import Process, Pipe, current_process
 from subprocess import Popen, PIPE, call
 from datetime import datetime
-import web, time, random, json, serial
+import web, time, random, json, serial, os
 from smbus import SMBus
 #from pid import pid as PIDController
 from pid import pidpy as PIDController
@@ -35,8 +35,8 @@ class param:
     duty_cycle = 0.0
     set_point = 0.0
     k_param = 44
-    i_param = 140
-    d_param = 8
+    i_param = 165
+    d_param = 4
 
 
 def add_global_hook(parent_conn):
@@ -367,6 +367,8 @@ def tempdata():
     return temp_C
 
 if __name__ == '__main__':
+    
+    os.chdir("/var/www")
      
     call(["modprobe", "w1-gpio"])
     call(["modprobe", "i2c-dev"])
