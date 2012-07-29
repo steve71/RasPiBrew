@@ -2,7 +2,7 @@
 
 ## Control a Water Heater Wirelessly over a Web Interface
 
-This program will control an electric heating element in a vessel to set temperatures and regulate boil.  All status included temperature is sent back wirelessly approx. every second.  The duty cycle and temperature is plotted in real time.  A Type C PID algorithm has been successfully tuned and implemented to automatically control the heating element when the desired temperature is set.   
+This program will control an electric heating element in a vessel to set temperatures and regulate boil.  All status included temperature is sent back wirelessly approx. every second.  The duty cycle and temperature is plotted in real time.  A Type C PID algorithm has been successfully implemented to automatically control the heating element when the desired temperature is set.   
 
 ## Web Interface in Firefox Browser
 
@@ -16,7 +16,7 @@ This program will control an electric heating element in a vessel to set tempera
 
 ## Hardware
 
-A $35 credit card sized raspberry pi computer is an inexpensive and very expandable solution to controlling a brewery.  Here it is only used to control one vessel.  Used in combination with a jeelabs i2c output plug to control relays, 1-wire temperature sensors and a cheap usb wifi dongle a wirelessly controlled temperature controller can be developed.  The Raspberry Pi can run a web server to communicate the data to a browser or application on a computer or smartphone.
+A $35 credit card sized raspberry pi computer is an inexpensive and very expandable solution to controlling a brewery.  Here it is only used for temperature control of one vessel.  Used in combination with a jeelabs i2c output plug to control relays, 1-wire temperature sensors and a cheap usb wifi dongle a wirelessly controlled temperature controller can be developed.  The Raspberry Pi can run a web server to communicate the data to a browser or application on a computer or smartphone.
 
 Electronics used to test: Raspberry Pi, Raspberry Pi Plate kit from Adafruit, Jeelabs Output Plug (I2C), 1-wire DS18B20 digital thermometer, 20 x 4 LCD and LCD117 Kit (serial interface), 4.7k resistor, 1k resistor and an LED.  The output plug directly controls a solid state relay (ssr) which connects to a heating element.  For wireless a Belkin USB wifi dongle is used.
 
