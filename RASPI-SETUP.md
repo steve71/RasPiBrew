@@ -11,7 +11,7 @@ Use Win32DiskImager to install onto SDCARD:
 There is a problem of SDcards not being recognized on laptops.  Use an sdcard hub or plug it into a device such as a camera and then connect the device to the computer is there is a problem recognizing the SDCard drive.
 
 In terminal type:  
-	`sudo apt-get update`
+	`sudo apt-get update`	
 	`sudo apt-get upgrade`
 
 ## Beginner's Guide 
