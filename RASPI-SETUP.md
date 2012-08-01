@@ -86,8 +86,7 @@ There are many GPIO pins on the raspberry pi available but the use of a buffered
 Install PySerial:
 [http://pyserial.sourceforge.net/pyserial.html](http://pyserial.sourceforge.net/pyserial.html)  
 Install Python i2c and smbus:  
-	`sudo apt-get install python-smbus`     
-	
+	`sudo apt-get install python-smbus`                
 [http://www.acmesystems.it/i2c](http://www.acmesystems.it/i2c)  
 Install Web.py:
 [http://webpy.org/](http://webpy.org/)
