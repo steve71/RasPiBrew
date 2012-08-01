@@ -10,7 +10,7 @@ Use Win32DiskImager to install onto SDCARD:
 
 There is a problem of SDcards not being recognized on laptops.  Use an sdcard hub or plug it into a device such as a camera and then connect the device to the computer is there is a problem recognizing the SDCard drive.
 
-In terminal type: 
+In terminal type:  
 	sudo apt-get update
 	sudo apt-get upgrade
 
@@ -84,7 +84,7 @@ There are many GPIO pins on the raspberry pi available but the use of a buffered
 **Python Modules:**  
 Install PySerial:
 [http://pyserial.sourceforge.net/pyserial.html](http://pyserial.sourceforge.net/pyserial.html)  
-Install Python i2c and smbus:
+Install Python i2c and smbus:  
 	sudo apt-get install python-smbus
 [http://www.acmesystems.it/i2c](http://www.acmesystems.it/i2c)  
 Install Web.py:
