@@ -99,5 +99,5 @@ Programming Python, Javascript, web page design and 1-click synchronization with
 Copy software to `/var/www` preserving the directory structure.     
 Start Putty on Windows and type login name and password.      
 Program must be run as superuser:  Type `sudo bash`      
-Start program by typing: `python raspibrew`
-
+Start program by typing: `python raspibrew`     
+Next, start the firefox browser on a computer on your network.
