@@ -98,6 +98,6 @@ Programming Python, Javascript, web page design and 1-click synchronization with
 
 Copy software to `/var/www` preserving the directory structure.     
 Program must be run as superuser.      
-type `sudo bash`
+type `sudo bash`      
 start program by typing: `python raspibrew`
 
