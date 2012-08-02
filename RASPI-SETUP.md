@@ -97,7 +97,7 @@ Aptana Studio 3 for IDE:
 Programming Python, Javascript, web page design and 1-click synchronization with Raspberry Pi
 
 Copy software to `/var/www` preserving the directory structure.     
-Program must be run as superuser.      
-type `sudo bash`      
+Start Putty on Windows and type login name and password.      
+Program must be run as superuser.  Therefore, type `sudo bash`      
 start program by typing: `python raspibrew`
 
