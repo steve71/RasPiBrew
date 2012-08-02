@@ -99,4 +99,3 @@ Programming Python, Javascript, web page design and 1-click synchronization with
 Copy software to `/var/www` preserving the directory structure.  
 start program by typing: `python raspibrew`
 
-In order to start software on boot, put the command `python raspibrew` in `/etc/rc.local`
