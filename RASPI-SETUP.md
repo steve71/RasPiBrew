@@ -96,6 +96,8 @@ Aptana Studio 3 for IDE:
 [http://www.aptana.com/products/studio3](http://www.aptana.com/products/studio3)  
 Programming Python, Javascript, web page design and 1-click synchronization with Raspberry Pi
 
-Copy software to `/var/www` preserving the directory structure.  
+Copy software to `/var/www` preserving the directory structure.     
+Program must be run as superuser.      
+type `sudo bash`
 start program by typing: `python raspibrew`
 
