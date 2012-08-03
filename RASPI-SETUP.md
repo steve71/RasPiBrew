@@ -10,6 +10,11 @@ Use Win32DiskImager to install onto SDCARD:
 
 There is a problem of SDcards not being recognized on laptops.  Use an sdcard hub or plug it into a device such as a camera and then connect the device to the computer is there is a problem recognizing the SDCard drive.
 
+In terminal type:	  
+	
+	sudo apt-get update		
+	sudo apt-get upgrade
+
 ## Beginner's Guide 
 
 Follow the beginners guide to get up and running:  
@@ -48,7 +53,8 @@ Replace `linksys` with the name of your router and add
 
 with the correct ssid and wireless key passphrase.
 
-
+Tutorial on setting up a static IP address:          
+[http://www.penguintutor.com/blog/viewblog.php?blog=6306](http://www.penguintutor.com/blog/viewblog.php?blog=6306)          
 Tutorial on setting up a Belkin USB wifi adapter:  
 [http://www.penguintutor.com/blog/viewblog.php?blog=6281](http://www.penguintutor.com/blog/viewblog.php?blog=6281)  
 Tutorial on setting up wifi device on linux:  
@@ -80,7 +86,8 @@ There are many GPIO pins on the raspberry pi available but the use of a buffered
 **Python Modules:**  
 Install PySerial:
 [http://pyserial.sourceforge.net/pyserial.html](http://pyserial.sourceforge.net/pyserial.html)  
-Install Python i2c and smbus:
+Install Python i2c and smbus:  
+	`sudo apt-get install python-smbus`                
 [http://www.acmesystems.it/i2c](http://www.acmesystems.it/i2c)  
 Install Web.py:
 [http://webpy.org/](http://webpy.org/)
@@ -89,6 +96,8 @@ Aptana Studio 3 for IDE:
 [http://www.aptana.com/products/studio3](http://www.aptana.com/products/studio3)  
 Programming Python, Javascript, web page design and 1-click synchronization with Raspberry Pi
 
-Copy software to `/var/www` preserving the directory structure.  
-start program by typing: `python raspibrew`
-
+Copy software to `/var/www` preserving the directory structure.     
+Start Putty on Windows and type login name and password.      
+Program must be run as superuser:  Type `sudo bash`      
+Start program by typing: `python raspibrew`     
+Next, start the firefox browser on a computer on your network.
