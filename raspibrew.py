@@ -20,7 +20,7 @@
 # IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-from multiprocessing import Process, Pipe, current_process
+from multiprocessing import Process, Pipe, Queue, current_process
 from subprocess import Popen, PIPE, call
 from datetime import datetime
 import web, time, random, json, serial, os
@@ -39,9 +39,9 @@ class param:
     d_param = 4
 
 
-def add_global_hook(parent_conn):
+def add_global_hook(parent_conn, statusQ):
     
-    g = web.storage({"parent_conn": parent_conn})
+    g = web.storage({"parent_conn" : parent_conn, "statusQ" : statusQ})
     def _wrapper(handler):
         web.ctx.globals = g
         return handler()
@@ -191,7 +191,18 @@ def tempControlProcTest(mode, cycle_time, duty_cycle, set_point, k_param, i_para
             
 #controls 
 
-def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param, conn):
+def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param, statusQ, conn):
+    
+        #initialize LCD
+        ser = serial.Serial("/dev/ttyAMA0", 9600)
+        ser.write("?BFF")
+        time.sleep(.1) #wait 100msec
+        ser.write("?f?a")
+        ser.write("?y0?x00PID off      ")
+        ser.write("?y1?x00HLT:")
+        ser.write("?y3?x00Heat: off      ")
+        ser.write("?D70609090600000000") #define degree symbol
+        time.sleep(.1) #wait 100msec
             
         p = current_process()
         print 'Starting:', p.name, p.pid
@@ -203,14 +214,6 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
         pheat = Process(name = "heatProc", target=heatProc, args=(cycle_time, duty_cycle, child_conn_heat))
         pheat.daemon = True
         pheat.start() 
-        
-        #initialize LCD
-        ser = serial.Serial("/dev/ttyAMA0", 9600)
-        ser.write("?BFF")
-        ser.write("?f?a")
-        ser.write("?y0?x00PID off      ")
-        ser.write("?y1?x00HLT:")
-        ser.write("?y3?x00Heat: off      ")
         
         temp_F_ma_list = []
         temp_F_ma = 0.0
@@ -245,8 +248,9 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
                 ser.write("?y1?x05")
                 ser.write(temp_F_str)
                 #ser.write("?y1?x10")
-                ser.write("?D70609090600000000") #degree symbol
-                ser.write("?7F   ") #degree F
+                ser.write("?7") #degree
+                time.sleep(.005) #wait 5msec
+                ser.write("F   ") 
                 readytemp = True
             if readytemp == True:
                 if mode == "auto":
@@ -257,7 +261,8 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
                     duty_cycle = pid.calcPID_reg4(temp_F_ma, set_point, True)
                     #send to heat process every cycle
                     parent_conn_heat.send([cycle_time, duty_cycle])   
-                conn.send([temp_F_str, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param]) #GET request
+                if (not statusQ.full()):    
+                    statusQ.put([temp_F_str, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param]) #GET request
                 readytemp == False   
                 
             while parent_conn_heat.poll(): #non blocking receive
@@ -276,8 +281,9 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
                     ser.write("?y1?x00HLT:")
                     ser.write("?y3?x00Set To: ")
                     ser.write("%3.1f" % set_point)
-                    ser.write("?D70609090600000000") #degree symbol
-                    ser.write("?7F   ") #degree F
+                    ser.write("?7") #degree
+                    time.sleep(.005) #wait 5msec
+                    ser.write("F   ") 
                     print "auto selected"
                     #pid = PIDController.PID(cycle_time, k_param, i_param, d_param) #init pid
                     #duty_cycle = pid.calcPID(float(temp), set_point, True)
@@ -332,9 +338,10 @@ class getstatus:
     def GET(self):
         #blocking receive
  
-        temp, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = web.ctx.globals.parent_conn.recv() 
-        while web.ctx.globals.parent_conn.poll(): #get last
-            temp, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = web.ctx.globals.parent_conn.recv()
+        if (statusQ.full()): #remove old data
+            for i in range(statusQ.qsize()):
+                temp, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = web.ctx.globals.statusQ.get() 
+        temp, elapsed, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = web.ctx.globals.statusQ.get() 
             
         out = json.dumps({"temp" : temp,
                        "elapsed" : elapsed,
@@ -381,13 +388,14 @@ if __name__ == '__main__':
 
     app = web.application(urls, globals()) 
     
-    parent_conn, child_conn = Pipe()       
+    statusQ = Queue(2)       
+    parent_conn, child_conn = Pipe()
     p = Process(name = "tempControlProc", target=tempControlProc, args=(param.mode, param.cycle_time, param.duty_cycle, \
                                                               param.set_point, param.k_param, param.i_param, param.d_param, \
-                                                              child_conn))
+                                                              statusQ, child_conn))
     p.start()
     
-    app.add_processor(add_global_hook(parent_conn))
+    app.add_processor(add_global_hook(parent_conn, statusQ))
      
     app.run()
 
