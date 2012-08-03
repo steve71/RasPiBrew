@@ -100,6 +100,6 @@ Copy software to `/var/www` preserving the directory structure.
 Start Putty on Windows and type login name and password.      
 Program must be run as superuser:  Type `sudo bash`      
 Start program by typing: `python raspibrew`     
-Next, start the firefox browser on a computer on your network.       
+Next, start the firefox browser on a computer on your local network.       
 
 In order to run at boot add `python raspibrew` to `/etc/rc.local`
