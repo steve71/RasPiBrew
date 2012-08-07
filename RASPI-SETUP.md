@@ -2,7 +2,7 @@
 
 ## Load Operating System onto SDCard
 
-Download the raspberry pi operating system:
+Download the raspberry pi operating system and unzip:
 [http://opencodeproject.com/rasppi/images/debian/6/debian6-19-04-2012](http://opencodeproject.com/rasppi/images/debian/6/debian6-19-04-2012/ "Raspberry Pi Operating System")      
 
 Use Win32DiskImager to install onto SDCARD:  
