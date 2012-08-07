@@ -84,16 +84,12 @@ Also more than one i2c Jeelab plug can be connected to the raspberry pi via the 
 There are many GPIO pins on the raspberry pi available but the use of a buffered interface on these is recommended which will help protect against damage.
 
 **Python Modules:**  
-Install Python i2c and smbus:  
-	`sudo apt-get install python-smbus`  
+Install Python i2c and smbus:  `sudo apt-get install python-smbus`  
 [http://www.acmesystems.it/i2c](http://www.acmesystems.it/i2c)    
-Install PIP package installer:
-	sudo apt-get install python-pip    
-Install PySerial:
-	sudo pip install pyserial   
+Install PIP package installer: `sudo apt-get install python-pip`    
+Install PySerial:  `sudo pip install pyserial`   
 [http://pyserial.sourceforge.net/pyserial.html](http://pyserial.sourceforge.net/pyserial.html)   
-Install Web.py:      
-	sudo pip install web.py	       
+Install Web.py: `sudo pip install web.py`	       
 [http://webpy.org/](http://webpy.org/)
 
 Aptana Studio 3 for IDE:
