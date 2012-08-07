@@ -3,7 +3,7 @@
 ## Load Operating System onto SDCard
 
 Download the raspberry pi operating system:
-[http://www.raspberrypi.org/downloads](http://www.raspberrypi.org/downloads "Raspberry Pi Operating System")
+[http://opencodeproject.com/rasppi/images/debian/6/debian6-19-04-2012](http://opencodeproject.com/rasppi/images/debian/6/debian6-19-04-2012/ "Raspberry Pi Operating System")      
 
 Use Win32DiskImager to install onto SDCARD:  
 [http://www.softpedia.com/get/CD-DVD-Tools/Data-CD-DVD-Burning/Win32-Disk-Imager.shtml](http://www.softpedia.com/get/CD-DVD-Tools/Data-CD-DVD-Burning/Win32-Disk-Imager.shtml "Win32DiskImager")
@@ -62,7 +62,7 @@ Tutorial on setting up wifi device on linux:
 
 ## Kernel Patch for Dallas 1-wire and I2C
 
-Note that the following has *not* been tested with the new Raspbian Distribution and could cause you having to reinstall the operating system on the sdcard.
+Note that the following only works with the Debian Wheezy June Distribution (debian6-19-04-2012.zip):    
 
 Automated script to add 1-wire and I2C drivers:  
 
@@ -84,12 +84,16 @@ Also more than one i2c Jeelab plug can be connected to the raspberry pi via the 
 There are many GPIO pins on the raspberry pi available but the use of a buffered interface on these is recommended which will help protect against damage.
 
 **Python Modules:**  
-Install PySerial:
-[http://pyserial.sourceforge.net/pyserial.html](http://pyserial.sourceforge.net/pyserial.html)  
 Install Python i2c and smbus:  
-	`sudo apt-get install python-smbus`                
-[http://www.acmesystems.it/i2c](http://www.acmesystems.it/i2c)  
-Install Web.py:
+	`sudo apt-get install python-smbus`  
+[http://www.acmesystems.it/i2c](http://www.acmesystems.it/i2c)    
+Install PIP package installer:
+	sudo apt-get install python-pip    
+Install PySerial:
+	sudo pip install pyserial   
+[http://pyserial.sourceforge.net/pyserial.html](http://pyserial.sourceforge.net/pyserial.html)   
+Install Web.py:      
+	sudo pip install web.py	       
 [http://webpy.org/](http://webpy.org/)
 
 Aptana Studio 3 for IDE:
