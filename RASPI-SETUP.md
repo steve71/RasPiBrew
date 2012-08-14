@@ -102,4 +102,4 @@ Program must be run as superuser:  Type `sudo bash`
 Start program by typing: `python raspibrew`     
 Next, start the firefox browser on a computer on your local network.       
 
-In order to run at boot add `python raspibrew` to `/etc/rc.local`
+In order to run at boot add `python /var/www/raspibrew.py` to `/etc/rc.local`
