@@ -2,8 +2,8 @@
 
 ## Load Operating System onto SDCard
 
-Download the raspberry pi operating system and unzip:
-[http://opencodeproject.com/rasppi/images/debian/6/debian6-19-04-2012](http://opencodeproject.com/rasppi/images/debian/6/debian6-19-04-2012/ "Raspberry Pi Operating System")      
+Download the raspberry pi operating system:
+[http://www.raspberrypi.org/downloads](http://www.raspberrypi.org/downloads "Raspberry Pi Operating System")
 
 Use Win32DiskImager to install onto SDCARD:  
 [http://www.softpedia.com/get/CD-DVD-Tools/Data-CD-DVD-Burning/Win32-Disk-Imager.shtml](http://www.softpedia.com/get/CD-DVD-Tools/Data-CD-DVD-Burning/Win32-Disk-Imager.shtml "Win32DiskImager")
@@ -62,7 +62,7 @@ Tutorial on setting up wifi device on linux:
 
 ## Kernel Patch for Dallas 1-wire and I2C
 
-Note that the following only works with the Debian Wheezy June Distribution (debian6-19-04-2012.zip):    
+Note that the following has *not* been tested with the new Raspbian Distribution and could cause you having to reinstall the operating system on the sdcard.
 
 Automated script to add 1-wire and I2C drivers:  
 
@@ -84,22 +84,94 @@ Also more than one i2c Jeelab plug can be connected to the raspberry pi via the 
 There are many GPIO pins on the raspberry pi available but the use of a buffered interface on these is recommended which will help protect against damage.
 
 **Python Modules:**  
-Install Python i2c and smbus:  `sudo apt-get install python-smbus`  
-[http://www.acmesystems.it/i2c](http://www.acmesystems.it/i2c)    
-Install PIP package installer: `sudo apt-get install python-pip`    
-Install PySerial:  `sudo pip install pyserial`   
-[http://pyserial.sourceforge.net/pyserial.html](http://pyserial.sourceforge.net/pyserial.html)   
-Install Web.py: `sudo pip install web.py`	       
+Install pip (package installer):  
+	`sudo apt-get install python-setuptools`  
+
+Install PySerial:  
+	`sudo pip install pyserial`  
+[http://pyserial.sourceforge.net/pyserial.html](http://pyserial.sourceforge.net/pyserial.html)  
+
+Install Python i2c and smbus:  
+	`sudo apt-get install python-smbus`                
+[http://www.acmesystems.it/i2c](http://www.acmesystems.it/i2c)  
+
+Install Web.py:  
+	`sudo easy_install web.py`  
 [http://webpy.org/](http://webpy.org/)
 
-Aptana Studio 3 for IDE:
-[http://www.aptana.com/products/studio3](http://www.aptana.com/products/studio3)  
-Programming Python, Javascript, web page design and 1-click synchronization with Raspberry Pi
+**RasPiBrew:**   
+In Raspberry Pi terminal window:  
 
+	sudo bash
+	cd /var
+	mkdir www
 Copy software to `/var/www` preserving the directory structure.     
 Start Putty on Windows and type login name and password.      
 Program must be run as superuser:  Type `sudo bash`      
 Start program by typing: `python raspibrew`     
-Next, start the firefox browser on a computer on your local network.       
+Next, start the firefox browser on a computer on your network.  If ip address of the Raspberry Pi is 192.168.1.3 then point the browser to http://192.168.1.3:8080
 
-In order to run at boot add `python /var/www/raspibrew.py` to `/etc/rc.local`
+How to Start RasPiBrew on Boot up:
+
+Create a new file: `/etc/init.d/raspibrew` as superuser and insert the following script:
+
+	#! /bin/sh
+	# /etc/init.d/raspibrew
+
+	### BEGIN INIT INFO
+	# Provides:          raspibrew
+	# Required-Start:    $remote_fs $syslog
+	# Required-Stop:     $remote_fs $syslog
+	# Default-Start:     2 3 4 5
+	# Default-Stop:      0 1 6
+	# Short-Description: Simple script to start a program at boot
+	# Description:       A simple script from www.stuffaboutcode.com which will start / st$
+	### END INIT INFO
+
+	# If you want a command to always run, put it here
+
+	# Carry out specific functions when asked to by the system
+	case "$1" in
+  		start)
+    		echo "Starting RasPiBrew"
+    		# run application you want to start
+    		python /var/www/raspibrew.py
+    	;;
+  		stop)
+    		echo "Stopping RasPiBrew"
+    		# kill application you want to stop
+    		killall python
+    	;;
+  	*)
+    	echo "Usage: /etc/init.d/raspibrew {start|stop}"
+    	exit 1
+    	;;
+	esac
+
+	exit 0
+
+Make script executable:  
+`sudo chmod 755 /etc/init.d/raspibrew`  
+
+Register script to be run at start-up:  
+`sudo update-rc.d raspibrew defaults`
+
+To Remove script from start-up:  
+`sudo update-rc.d -f  raspibrew remove`
+
+To test starting the program:  
+`sudo /etc/init.d/raspibrew start`
+
+To test stopping the program:  
+`sudo /etc/init.d/raspibrew stop`
+
+[http://www.stuffaboutcode.com/2012/06/raspberry-pi-run-program-at-start-up.html](http://www.stuffaboutcode.com/2012/06/raspberry-pi-run-program-at-start-up.html)
+
+**IDE for Development:**  
+Create root password on Raspberry Pi:  
+	`sudo passwd root`  
+    Enter new UNIX password: `raspberry`  
+
+Install Aptana Studio 3 for IDE on your computer:  
+[http://www.aptana.com/products/studio3](http://www.aptana.com/products/studio3)  
+This is used for programming in Python, Javascript, web page design and 1-click synchronization with Raspberry Pi
