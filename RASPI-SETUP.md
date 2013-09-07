@@ -175,3 +175,11 @@ Create root password on Raspberry Pi:
 Install Aptana Studio 3 for IDE on your computer:  
 [http://www.aptana.com/products/studio3](http://www.aptana.com/products/studio3)  
 This is used for programming in Python, Javascript, web page design and 1-click synchronization with Raspberry Pi
+
+After creating a project and adding all source files, right click on project name.  
+Select `Publish` and then `Run Web Development Wizard...`  
+Select `FTP/SFTP/FTPS` and fill out form such as in the following image:  
+
+![](https://github.com/steve71/RasPiBrew/raw/master/img/aptana_sftp_connection.png)  
+
+Everytime files are saved on your computer they are automatically sent over to the Raspberry Pi.
