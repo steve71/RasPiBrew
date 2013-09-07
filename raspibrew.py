@@ -88,20 +88,7 @@ class raspibrew:
          
         web.ctx.globals.parent_conn.send([self.mode, self.cycle_time, self.duty_cycle, self.set_point, \
                               self.k_param, self.i_param, self.d_param])  
-             
- 
-def getrandProc(conn):
-    p = current_process()
-    print 'Starting:', p.name, p.pid
-    while (True):
-        #t = time.time()
-        num = randomnum()
-        #elapsed = time.time() - t
-        time.sleep(.5) 
-        #print num
-        conn.send(num)
-
-        
+                  
 def gettempProc(conn):
     p = current_process()
     print 'Starting:', p.name, p.pid
@@ -109,8 +96,9 @@ def gettempProc(conn):
         t = time.time()
         time.sleep(.5) #.1+~.83 = ~1.33 seconds
         num = tempdata()
-        elapsed = "%.2f" % (time.time() - t)
-        conn.send([num, elapsed])
+        if (num != -99):
+            elapsed = "%.2f" % (time.time() - t)
+            conn.send([num, elapsed])
         
 
 def getonofftime(cycle_time, duty_cycle):
@@ -119,23 +107,7 @@ def getonofftime(cycle_time, duty_cycle):
     off_time = cycle_time*(1.0-duty)   
     return [on_time, off_time]
         
-def heatProctest(cycle_time, duty_cycle, conn):
-    #p = current_process()
-    #print 'Starting:', p.name, p.pid
-    while (True):
-        if (conn.poll()):
-            cycle_time, duty_cycle = conn.recv()
-            
-        on_time, off_time = getonofftime(cycle_time, duty_cycle)
-        #print on_time
-        # led on
-        time.sleep(on_time)
-        #print off_time
-        # led off
-        time.sleep(off_time)
-        conn.send([cycle_time, duty_cycle]) #shows its alive
-        
-        
+      
 def heatProc(cycle_time, duty_cycle, conn):
     p = current_process()
     print 'Starting:', p.name, p.pid
@@ -161,34 +133,7 @@ def heatProc(cycle_time, duty_cycle, conn):
         #y = datetime.now()
         #time_sec = y.second + y.microsecond/1000000.0
         #print "%s Thread time (sec) after LED off: %.2f" % (self.getName(), time_sec)
-
-def tempControlProcTest(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param, conn):
-    
-        p = current_process()
-        print 'Starting:', p.name, p.pid
-        parent_conn_temp, child_conn_temp = Pipe()            
-        ptemp = Process(name = "getrandProc", target=getrandProc, args=(child_conn_temp,))
-        #ptemp.daemon = True
-        ptemp.start()   
-        parent_conn_heat, child_conn_heat = Pipe()           
-        pheat = Process(name = "heatProctest", target=heatProctest, args=(cycle_time, duty_cycle, child_conn_heat))
-        #pheat.daemon = True
-        pheat.start()  
         
-        while (True):
-            if parent_conn_temp.poll():
-                randnum = parent_conn_temp.recv() #non blocking receive
-                conn.send([randnum, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param])
-            if parent_conn_heat.poll():
-                cycle_time, duty_cycle = parent_conn_heat.recv()
-                #duty_cycle = on_time/offtime*100.0
-                #cycle_time = on_time + off_time
-            if conn.poll():
-                mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = conn.recv()
-                #conn.send([mode, cycle_time, duty_cycle])
-                #if mode == "manual": 
-                parent_conn_heat.send([cycle_time, duty_cycle])
-            
 #controls 
 
 def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param, statusQ, conn):
@@ -308,28 +253,6 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
                 readyPOST = False
             time.sleep(.01)
                     
-class getrand:
-    def __init__(self):
-        pass
-    def GET(self):
-        #global parent_conn  
-        while parent_conn.poll(): #get last
-            randnum, mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param = parent_conn.recv()
-        #controlData = parent_conn.recv()
-        out = json.dumps({"temp" : randnum,
-                          "mode" : mode,
-                    "cycle_time" : cycle_time,
-                    "duty_cycle" : duty_cycle,
-                     "set_point" : set_point,
-                       "k_param" : k_param,
-                       "i_param" : i_param,
-                       "d_param" : d_param})  
-        return out
-        #return randomnum()
-        
-    def POST(self):
-        pass
-
 class getstatus:
     
     def __init__(self):
@@ -358,17 +281,17 @@ class getstatus:
     def POST(self):
         pass
     
-def randomnum():
-    time.sleep(.5)
-    return random.randint(50,220)
-
+    
 def tempdata():
     #change 28-000002b2fa07 to your own temp sensor id
     #pipe = Popen(["cat","/sys/bus/w1/devices/w1_bus_master1/28-000002b2fa07/w1_slave"], stdout=PIPE)
     pipe = Popen(["cat","/sys/bus/w1/devices/w1_bus_master1/28-0000037eb5c0/w1_slave"], stdout=PIPE)
     result = pipe.communicate()[0]
-    result_list = result.split("=")
-    temp_C = float(result_list[-1])/1000 # temp in Celcius
+    #print result
+    if (result.split('\n')[0].split(' ')[11] == "YES"):
+        temp_C = float(result.split("=")[-1])/1000 # temp in Celcius
+    else:
+        temp_C = -99
     #temp_F = (9.0/5.0)*temp_C + 32
     #return "%3.2f" % temp_C
     return temp_C
@@ -378,6 +301,8 @@ if __name__ == '__main__':
     os.chdir("/var/www")
      
     call(["modprobe", "w1-gpio"])
+    call(["modprobe", "w1-therm"])
+    call(["modprobe", "i2c-bcm2708"])
     call(["modprobe", "i2c-dev"])
     
     urls = ("/", "raspibrew",
