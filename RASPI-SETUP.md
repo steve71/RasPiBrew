@@ -139,6 +139,7 @@ Create a new file: `/etc/init.d/raspibrew` as superuser and insert the following
     		echo "Stopping RasPiBrew"
     		# kill application you want to stop
     		killall python
+    		python /var/www/cleanupGPIO.py
     	;;
   	*)
     	echo "Usage: /etc/init.d/raspibrew {start|stop}"
