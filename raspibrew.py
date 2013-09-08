@@ -25,6 +25,7 @@ from subprocess import Popen, PIPE, call
 from datetime import datetime
 import web, time, random, json, serial, os
 from smbus import SMBus
+import RPi.GPIO as GPIO
 #from pid import pid as PIDController
 from pid import pidpy as PIDController
 
@@ -95,7 +96,7 @@ def gettempProc(conn):
     while (True):
         t = time.time()
         time.sleep(.5) #.1+~.83 = ~1.33 seconds
-        num = tempdata()
+        num = tempData1Wire()
         if (num != -99):
             elapsed = "%.2f" % (time.time() - t)
             conn.send([num, elapsed])
@@ -108,7 +109,7 @@ def getonofftime(cycle_time, duty_cycle):
     return [on_time, off_time]
         
       
-def heatProc(cycle_time, duty_cycle, conn):
+def heatProcI2C(cycle_time, duty_cycle, conn):
     p = current_process()
     print 'Starting:', p.name, p.pid
     bus = SMBus(0)
@@ -133,6 +134,33 @@ def heatProc(cycle_time, duty_cycle, conn):
         #y = datetime.now()
         #time_sec = y.second + y.microsecond/1000000.0
         #print "%s Thread time (sec) after LED off: %.2f" % (self.getName(), time_sec)
+
+def heatProcGPIO(cycle_time, duty_cycle, conn):
+    p = current_process()
+    print 'Starting:', p.name, p.pid
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(17, GPIO.OUT)
+    while (True):
+        while (conn.poll()): #get last
+            cycle_time, duty_cycle = conn.recv()
+        conn.send([cycle_time, duty_cycle])  
+        if duty_cycle == 0:
+            GPIO.output(17, False)
+            time.sleep(cycle_time)
+        elif duty_cycle == 100:
+            GPIO.output(17, True)
+            time.sleep(cycle_time)
+        else:
+            on_time, off_time = getonofftime(cycle_time, duty_cycle)
+            GPIO.output(17, True)
+            time.sleep(on_time)
+            GPIO.output(17, False)
+            time.sleep(off_time)
+        
+        #y = datetime.now()
+        #time_sec = y.second + y.microsecond/1000000.0
+        #print "%s Thread time (sec) after LED off: %.2f" % (self.getName(), time_sec)
+
         
 #controls 
 
@@ -156,7 +184,7 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
         ptemp.daemon = True
         ptemp.start()   
         parent_conn_heat, child_conn_heat = Pipe()           
-        pheat = Process(name = "heatProc", target=heatProc, args=(cycle_time, duty_cycle, child_conn_heat))
+        pheat = Process(name = "heatProcGPIO", target=heatProcGPIO, args=(cycle_time, duty_cycle, child_conn_heat))
         pheat.daemon = True
         pheat.start() 
         
@@ -276,13 +304,13 @@ class getstatus:
                        "i_param" : i_param,
                        "d_param" : d_param})  
         return out
-        #return tempdata()
+        #return tempData1Wire()
        
     def POST(self):
         pass
     
     
-def tempdata():
+def tempData1Wire():
     #change 28-000002b2fa07 to your own temp sensor id
     #pipe = Popen(["cat","/sys/bus/w1/devices/w1_bus_master1/28-000002b2fa07/w1_slave"], stdout=PIPE)
     pipe = Popen(["cat","/sys/bus/w1/devices/w1_bus_master1/28-0000037eb5c0/w1_slave"], stdout=PIPE)
