@@ -26,7 +26,6 @@ from datetime import datetime
 import web, time, random, json, serial, os
 from smbus import SMBus
 import RPi.GPIO as GPIO
-#from pid import pid as PIDController
 from pid import pidpy as PIDController
 
 
@@ -68,7 +67,6 @@ class raspibrew:
         
     def POST(self):
         data = web.data()
-        #print data
         datalist = data.split("&")
         for item in datalist:
             datalistkey = item.split("=")
@@ -130,10 +128,6 @@ def heatProcI2C(cycle_time, duty_cycle, conn):
             time.sleep(on_time)
             bus.write_byte_data(0x26,0x09,0x00)
             time.sleep(off_time)
-        
-        #y = datetime.now()
-        #time_sec = y.second + y.microsecond/1000000.0
-        #print "%s Thread time (sec) after LED off: %.2f" % (self.getName(), time_sec)
 
 def heatProcGPIO(cycle_time, duty_cycle, conn):
     p = current_process()
@@ -156,13 +150,7 @@ def heatProcGPIO(cycle_time, duty_cycle, conn):
             time.sleep(on_time)
             GPIO.output(17, False)
             time.sleep(off_time)
-        
-        #y = datetime.now()
-        #time_sec = y.second + y.microsecond/1000000.0
-        #print "%s Thread time (sec) after LED off: %.2f" % (self.getName(), time_sec)
-
-        
-#controls 
+           
 
 def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d_param, statusQ, conn):
     
@@ -199,9 +187,7 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
                 
                 temp_F_ma_list.append(temp_F) 
                 
-                #print temp_F_ma_list
                 #smooth temp data
-                #
                 if (len(temp_F_ma_list) == 1):
                     temp_F_ma = temp_F_ma_list[0]
                 elif (len(temp_F_ma_list) == 2):
@@ -213,14 +199,12 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
                 else:    
                     temp_F_ma = (temp_F_ma_list[0] + temp_F_ma_list[1] + temp_F_ma_list[2] + temp_F_ma_list[3] + \
                                                                                             temp_F_ma_list[4]) / 5.0
-                    temp_F_ma_list.pop(0) #remove oldest element in list
-                    #print "Temp F MA %.2f" % temp_F_ma
+                    temp_F_ma_list.pop(0) #remove oldest element in list                
                 
                 temp_C_str = "%3.2f" % temp_C
                 temp_F_str = "%3.2f" % temp_F
                 ser.write("?y1?x05")
                 ser.write(temp_F_str)
-                #ser.write("?y1?x10")
                 ser.write("?7") #degree
                 time.sleep(.005) #wait 5msec
                 ser.write("F   ") 
@@ -228,8 +212,6 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
             if readytemp == True:
                 if mode == "auto":
                     #calculate PID every cycle - alwyas get latest temp
-                    #duty_cycle = pid.calcPID(float(temp), set_point, True)
-                    #set_point_C = (5.0/9.0)*(set_point - 32)
                     print "Temp F MA %.2f" % temp_F_ma
                     duty_cycle = pid.calcPID_reg4(temp_F_ma, set_point, True)
                     #send to heat process every cycle
@@ -258,10 +240,7 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
                     time.sleep(.005) #wait 5msec
                     ser.write("F   ") 
                     print "auto selected"
-                    #pid = PIDController.PID(cycle_time, k_param, i_param, d_param) #init pid
-                    #duty_cycle = pid.calcPID(float(temp), set_point, True)
                     pid = PIDController.pidpy(cycle_time, k_param, i_param, d_param) #init pid
-                    #set_point_C = (5.0/9.0)*(set_point - 32)
                     duty_cycle = pid.calcPID_reg4(temp_F_ma, set_point, True)
                     parent_conn_heat.send([cycle_time, duty_cycle])  
                 if mode == "manual": 
@@ -304,7 +283,6 @@ class getstatus:
                        "i_param" : i_param,
                        "d_param" : d_param})  
         return out
-        #return tempData1Wire()
        
     def POST(self):
         pass
@@ -312,16 +290,13 @@ class getstatus:
     
 def tempData1Wire():
     #change 28-000002b2fa07 to your own temp sensor id
-    #pipe = Popen(["cat","/sys/bus/w1/devices/w1_bus_master1/28-000002b2fa07/w1_slave"], stdout=PIPE)
     pipe = Popen(["cat","/sys/bus/w1/devices/w1_bus_master1/28-0000037eb5c0/w1_slave"], stdout=PIPE)
     result = pipe.communicate()[0]
-    #print result
     if (result.split('\n')[0].split(' ')[11] == "YES"):
         temp_C = float(result.split("=")[-1])/1000 # temp in Celcius
     else:
         temp_C = -99
-    #temp_F = (9.0/5.0)*temp_C + 32
-    #return "%3.2f" % temp_C
+        
     return temp_C
 
 if __name__ == '__main__':
