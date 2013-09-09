@@ -4,6 +4,8 @@
 
 This program will control an electric heating element in a vessel to set temperatures and regulate boil.  All status included temperature is sent back wirelessly approx. every second.  The duty cycle and temperature is plotted in real time.  A Type C PID algorithm has been successfully implemented to automatically control the heating element when the desired temperature is set.   
 
+How to setup: [https://github.com/steve71/RasPiBrew/blob/master/RASPI-SETUP.md](https://github.com/steve71/RasPiBrew/blob/master/RASPI-SETUP.md)
+
 ## Web Interface in Firefox Browser
 
 <img src="https://github.com/steve71/RasPiBrew/raw/master/img/PID_Tuning.png" alt="" width="954 height="476.5" /> 
@@ -18,16 +20,13 @@ The heat plot shows duty cycle percentage over time in seconds.
 
 ## Hardware
 
-A $35 credit card sized raspberry pi computer is an inexpensive and very expandable solution to controlling a home brewery.  Here it is used for temperature control of one vessel.  Used in combination with a jeelabs i2c output plug to control relays, 1-wire temperature sensors and a cheap usb wifi dongle a wirelessly controlled temperature controller can be developed.  The Raspberry Pi can run a web server to communicate the data to a browser or application on a computer or smartphone.
+A $35 credit card sized Raspberry Pi computer is an inexpensive and very expandable solution to controlling the water temperature.  Here it is used for temperature control of one vessel.  Used in combination with a jeelabs thermo plug (1-wire and control relay), 1-wire temperature sensors and a usb wifi dongle, a wirelessly controlled temperature controller can be developed.  The Raspberry Pi can run a web server to communicate the data to a browser or application on a computer or smartphone.
 
-Electronics used to test: Raspberry Pi, Raspberry Pi Plate kit from Adafruit, Jeelabs Output Plug (I2C), 1-wire DS18B20 digital thermometer, 20x4 LCD and LCD117 kit (serial interface), 4.7k resistor, 1k resistor and an LED.  The output plug directly controls a solid state relay (ssr) which connects to a heating element.  For wireless a Belkin USB wifi dongle is used.
-
-<img src="https://github.com/steve71/RasPiBrew/raw/master/img/raspibrew.jpg" alt="" width="954 height="476.5" /> 
+Electronics used to test: Raspberry Pi, Raspberry Pi Plate kit from Adafruit, Jeelabs Thermo Plug circuit board (1wire and GPIO), Jeelabs Output Plug (I2C) (Optional to drive more relays. This requires software modification.), 1-wire DS18B20 digital thermometer, 20x4 LCD and LCD117 kit (serial interface), 4.7k resistor, 1k resistor, 1N4001 diode, and 2N4401 transistor.  For wireless an Edimax EW-7811UN dongle is used.
 
 Information on Raspberry Pi low-level peripherals:  
 [http://elinux.org/RPi_Low-level_peripherals](http://elinux.org/RPi_Low-level_peripherals)
 
-<img src="https://github.com/steve71/RasPiBrew/raw/master/img/TempController.jpg" alt="" width="470 height="238" />
 
 ## Software
 
@@ -45,13 +44,5 @@ An explanation on how to tune it is from the following web site:
 [http://www.vandelogt.nl/htm/regelen_pid_uk.htm](http://www.vandelogt.nl/htm/regelen_pid_uk.htm)  
 
 The PID can be tuned very simply via the Ziegler-Nichols open loop method.  Just follow the directions in the controller interface screen, highlight the sloped line in the temperature plot and the parameters are automatically calculated.  After tuning with the Ziegler-Nichols method the parameters still needed adjustment because there was an overshoot of about 2 degrees in my system. I did not want the temperature to go past the setpoint since it takes a long time to come back down. Therefore, the parameters were adjusted to eliminate the overshoot.  For this particular system the Ti term was more than doubled and the Td parameter was set to about a quarter of the open loop calculated value.  Also a simple moving average was used on the temperature data that was fed to the PID controller to help improve performance.  Tuning the parameters via the Integral of Time weighted Absolute Error (ITAE-Load) would provide the best results as described on van de Logt's website above.
-
-## Smartphone Control
-
-A useful way of controlling and monitoring the system is using an android app.  An existing app that was created for a temperature controller was modified to work with this web interface.  
-  
-<img src="https://github.com/steve71/RasPiBrew/raw/master/img/android1.jpg" alt="" width="470 height="238" />
-<img src="https://github.com/steve71/RasPiBrew/raw/master/img/android2.jpg" alt="" width="470 height="238" />
-<img src="https://github.com/steve71/RasPiBrew/raw/master/img/android3.jpg" alt="" width="470 height="238" />
 
 
