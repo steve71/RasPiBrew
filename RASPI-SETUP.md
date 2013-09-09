@@ -64,7 +64,7 @@ Tutorial on setting up wifi device on linux:
 An Adafruit Pi Plate Kit is used but there are many other breakout boards to choose from.  
 [http://www.adafruit.com/products/801](http://www.adafruit.com/products/801)  
 
-The Jeelabs Thermo Plug is used in this project.  Previously, it was breadboarded.  
+The Jeelabs Thermo Plug is used in this project. 
 [http://moderndevice.com/product/jeelabs-thermo-plug/](http://moderndevice.com/product/jeelabs-thermo-plug/)  
 Just the printed circuit board is needed and solder:
 	
@@ -72,6 +72,36 @@ Just the printed circuit board is needed and solder:
 	1k resistor
 	1N4001 Diode
 	2N4401 Transister
+
+Solder headers and connect it together using wire jumpers according to the following schematic:
+
+     ---------      ------- 
+    | 1-Wire  |    | Relay |
+    | Sensor  |    |       | 
+    | + - GND |    |  + -  |
+     ---------      -------
+      | |  |          | |           (Optional SSR Connections)
+      ---------------------          -----------   ---------
+     | Jeelabs Thermo Plug |        |  Relay 2 |  | Relay 3 | ...
+     | PWR +3V GND AIO DIO |        |  +  -    |  |  +  -   |
+      ---------------------          ----------    ---------     
+	    |   |   |   |   |             5V  |         5V  | 
+      ------------------------            |             |
+     | 5V  5V  GND  P4 P17    |     ---------------------------
+     |                     5V |---| VCC   P0            P1 ... |
+     |  Raspberry Pi/      GND|---| GND   Optional             |
+     |  Adafruit Plate kit SDA|---| DIO   Jeelabs Output Plug  | 
+     |                     SCL|---| AI0                        |
+     |      5V GND TX         |    ----------------------------
+      ------------------------
+             |  |   |
+          --------------   
+         | 20x4 LCD and |
+         | LCD117 kit   |
+          --------------
+          
+
+Note: The DS18B20 temp sensor looks to be 5V tolerant [http://datasheets.maximintegrated.com/en/ds/DS18B20.pdf](http://datasheets.maximintegrated.com/en/ds/DS18B20.pdf).  That is why the 5V on the Raspberry Pi is connected to the +3V pin on the Thermo plug.  The 3.3V pin on the Raspberry Pi is good up to 30 mA but the 5V pin can handle substantially more current.  The one-wire sensor shouldn't draw more than a couple of mA but to be safe the 5V pin is used.  
 
 A Jeelabs Output Plug [http://moderndevice.com/product/jeelabs-output-plug/](http://moderndevice.com/product/jeelabs-output-plug/) is also supported by changing the code to use the I2C heating process instead of the GPIO.  Change the following line:  
 `pheat = Process(name = "heatProcGPIO", target=heatProcGPIO, args=(cycle_time, duty_cycle, child_conn_heat))`  
