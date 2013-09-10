@@ -11,7 +11,7 @@ Keggle with ball valve, sight gauge, 1-wire sensor and 5500 Watt, 220V heating e
 <img src="https://github.com/steve71/RasPiBrew/raw/master/img/inside_keggle.JPG" alt="" width=500 height=400/>
 
 
-Added Android Control which communicates over the web interface:
+Added Android smart phone control which communicates over the web interface:
 
 <img src="https://github.com/steve71/RasPiBrew/raw/master/img/android1.jpg" alt="" width=450 height=350/>
 <img src="https://github.com/steve71/RasPiBrew/raw/master/img/android2.jpg" alt="" width=450 height=350/>
