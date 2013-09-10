@@ -48,7 +48,7 @@ Replace `linksys` with the name of your router and add
 with the correct ssid and wireless key passphrase.
 
 Tutorial on setting up a static IP address:          
-[http://www.penguintutor.com/blog/viewblog.php?blog=6306](http://www.penguintutor.com/blog/viewblog.php?blog=6306)
+[http://www.penguintutor.com/blog/viewblog.php?blog=6306](http://www.penguintutor.com/blog/viewblog.php?blog=6306)  
 Tutorial on setting up wifi device on linux:  
 [https://help.ubuntu.com/community/WifiDocs/WiFiHowTo](https://help.ubuntu.com/community/WifiDocs/WiFiHowTo)
 
