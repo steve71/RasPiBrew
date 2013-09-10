@@ -15,4 +15,4 @@ Added Android smart phone control which communicates over the web interface:
 
 <img src="https://github.com/steve71/RasPiBrew/raw/master/img/android1.jpg" alt="" width=450 height=350/>
 <img src="https://github.com/steve71/RasPiBrew/raw/master/img/android2.jpg" alt="" width=450 height=350/>
-<img src="https://github.com/steve71/RasPiBrew/raw/master/img/android3.jpg" alt="" width=350 height=450/>
+<img src="https://github.com/steve71/RasPiBrew/raw/master/img/android3.jpg" alt="" width=450 height=550/>
