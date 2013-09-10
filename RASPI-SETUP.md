@@ -20,10 +20,6 @@ Follow the beginners guide to get up and running:
 
 Run `sudo setupcon` once manually after the keyboard is setup otherwise you may have long boot times.
 
-## Setting up SSH
-Tutorial:  
-[http://fusionstrike.com/2012/setting-ssh-ftp-raspberry-pi-debian](http://fusionstrike.com/2012/setting-ssh-ftp-raspberry-pi-debian)
-
 ## Wireless Setup
 
 Lookup Compatible USB wifi devices and install the drivers:  
