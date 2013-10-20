@@ -295,7 +295,7 @@ class getstatus:
     
     
 def tempData1Wire():
-    #change 28-000002b2fa07 to your own temp sensor id
+    #change 28-0000037eb5c0 to your own temp sensor id
     pipe = Popen(["cat","/sys/bus/w1/devices/w1_bus_master1/28-0000037eb5c0/w1_slave"], stdout=PIPE)
     result = pipe.communicate()[0]
     if (result.split('\n')[0].split(' ')[11] == "YES"):
