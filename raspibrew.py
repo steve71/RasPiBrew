@@ -95,9 +95,8 @@ def gettempProc(conn):
         t = time.time()
         time.sleep(.5) #.1+~.83 = ~1.33 seconds
         num = tempData1Wire()
-        if (num != -99):
-            elapsed = "%.2f" % (time.time() - t)
-            conn.send([num, elapsed])
+        elapsed = "%.2f" % (time.time() - t)
+        conn.send([num, elapsed])
         
 
 def getonofftime(cycle_time, duty_cycle):
@@ -183,6 +182,10 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
             readytemp = False
             while parent_conn_temp.poll():
                 temp_C, elapsed = parent_conn_temp.recv() #non blocking receive    
+                
+                if temp_C == -99:
+                    print "Bad Temp Reading - retry"
+                    continue
                 temp_F = (9.0/5.0)*temp_C + 32
                 
                 temp_F_ma_list.append(temp_F) 
@@ -225,6 +228,9 @@ def tempControlProc(mode, cycle_time, duty_cycle, set_point, k_param, i_param, d
                 ser.write("?y2?x00Duty: ")
                 ser.write("%3.1f" % duty_cycle)
                 ser.write("%     ")    
+            
+            if readytemp == True:
+                print "Temp: %3.2f deg F, Heat Output: %3.1f%%" % (temp_F, duty_cycle)
                      
             readyPOST = False
             while conn.poll(): #POST settings
@@ -295,7 +301,7 @@ def tempData1Wire():
     if (result.split('\n')[0].split(' ')[11] == "YES"):
         temp_C = float(result.split("=")[-1])/1000 # temp in Celcius
     else:
-        temp_C = -99
+        temp_C = -99 #bad temp reading
         
     return temp_C
 
