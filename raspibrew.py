@@ -27,6 +27,7 @@ import web, time, random, json, serial, os
 from smbus import SMBus
 import RPi.GPIO as GPIO
 from pid import pidpy as PIDController
+import xml.etree.ElementTree as ET
 
 
 class param:
@@ -91,10 +92,15 @@ class raspibrew:
 def gettempProc(conn):
     p = current_process()
     print 'Starting:', p.name, p.pid
+    
+    tree = ET.parse('config.xml')
+    root = tree.getroot()
+    tempSensorId = root.find('Temp_Sensor_Id').text.strip()
+    
     while (True):
         t = time.time()
         time.sleep(.5) #.1+~.83 = ~1.33 seconds
-        num = tempData1Wire()
+        num = tempData1Wire(tempSensorId)
         elapsed = "%.2f" % (time.time() - t)
         conn.send([num, elapsed])
         
@@ -294,9 +300,9 @@ class getstatus:
         pass
     
     
-def tempData1Wire():
-    #change 28-0000037eb5c0 to your own temp sensor id
-    pipe = Popen(["cat","/sys/bus/w1/devices/w1_bus_master1/28-0000037eb5c0/w1_slave"], stdout=PIPE)
+def tempData1Wire(tempSensorId):
+    
+    pipe = Popen(["cat","/sys/bus/w1/devices/w1_bus_master1/" + tempSensorId + "/w1_slave"], stdout=PIPE)
     result = pipe.communicate()[0]
     if (result.split('\n')[0].split(' ')[11] == "YES"):
         temp_C = float(result.split("=")[-1])/1000 # temp in Celcius
