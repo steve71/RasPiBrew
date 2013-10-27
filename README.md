@@ -4,10 +4,10 @@
 
 This program will control an electric heating element in a vessel to set temperatures and regulate boil.  All status included temperature is sent back wirelessly approx. every second.  The duty cycle and temperature is plotted in real time.  A Type C PID algorithm has been successfully implemented to automatically control the heating element when the desired temperature is set.   
 
+RasPiBrew Webpage:
+[http://raspibrew.com](http://raspibrew.com)  
 Hardware and Software Setup Information:  
 [http://raspibrew.com/setup/](http://raspibrew.com/setup/)  
-Pics of my homebrew setup:  
-[https://github.com/steve71/RasPiBrew/blob/master/RASPI-HOMEBREW-PICS.md](https://github.com/steve71/RasPiBrew/blob/master/RASPI-HOMEBREW-PICS.md)
 
 ## Web Interface in Firefox Browser
 
