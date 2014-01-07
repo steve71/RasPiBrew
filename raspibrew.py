@@ -154,14 +154,21 @@ def gettempProc(conn):
     print 'Starting:', p.name, p.pid
     
     root = getRootXML()
-    tempSensorId = root.find('Temp_Sensor_Id').text.strip()
+    tempSensorIdList = [];
+    for tempSensorId in root.iter('Temp_Sensor_Id'):
+        tempSensorIdList.append(tempSensorId.text.strip())
+    
+    #tempSensorId = root.find('Temp_Sensor_Id').text.strip()
     
     while (True):
         t = time.time()
         time.sleep(.5) #.1+~.83 = ~1.33 seconds
-        num = tempData1Wire(tempSensorId)
-        elapsed = "%.2f" % (time.time() - t)
-        conn.send([num, elapsed])
+        tempSensorNum = 0
+        for tempSensorId in tempSensorIdList:
+            num = tempData1Wire(tempSensorId)
+            elapsed = "%.2f" % (time.time() - t)
+            conn.send([num, tempSensorNum, elapsed])
+            tempSensorNum += 1
         
 #Get time heating element is on and off during a set cycle time
 def getonofftime(cycle_time, duty_cycle):
@@ -170,7 +177,7 @@ def getonofftime(cycle_time, duty_cycle):
     off_time = cycle_time*(1.0-duty)   
     return [on_time, off_time]
         
-# Stand Alone Heat Process using I2C
+# Stand Alone Heat Process using I2C (optional)
 def heatProcI2C(cycle_time, duty_cycle, conn):
     p = current_process()
     print 'Starting:', p.name, p.pid
@@ -255,7 +262,7 @@ def tempControlProc(mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, bo
         while (True):
             readytemp = False
             while parent_conn_temp.poll(): #Poll Get Temperature Process Pipe
-                temp_C, elapsed = parent_conn_temp.recv() #non blocking receive from Get Temperature Process
+                temp_C, tempSensorNum, elapsed = parent_conn_temp.recv() #non blocking receive from Get Temperature Process
                 
                 if temp_C == -99:
                     print "Bad Temp Reading - retry"
@@ -311,7 +318,7 @@ def tempControlProc(mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, bo
                     #send to heat process every cycle
                     parent_conn_heat.send([cycle_time, duty_cycle])             
                 if mode == "boil":
-                    if (temp_F > boil_manage_temp) and (manage_boil_trigger == True): #do once
+                    if (temp > boil_manage_temp) and (manage_boil_trigger == True): #do once
                         manage_boil_trigger = False
                         duty_cycle = boil_duty_cycle 
                         parent_conn_heat.send([cycle_time, duty_cycle]) 
