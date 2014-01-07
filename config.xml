@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Config>
+    <!-- Temperature Sensor Id -->
 	<Temp_Sensor_Id>28-0000037eb5c0</Temp_Sensor_Id>
+	<!-- Units C (Celsius) or F (Fahrenheit) -->
+	<!-- Note: Default is F for Android app which can switch between F and C-->
+	<Temp_Units>F</Temp_Units>
 </Config>

@@ -44,10 +44,10 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 			// IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         
 			//declare globals
-        	var t, tempdataarray, heatdataarray, setpointdataarray, dutyCycle, options_temp, options_heat, plot, gaugeDisplay, newGaugeDisplay
+        	var t, tempdataarray, heatdataarray, setpointdataarray, dutyCycle, options_temp, options_heat, plot, gaugeDisplay, newGaugeDisplay;
         	var capture_on = 1;
-        	var temp_C, temp_F, setpoint_C
-        	t = 0
+        	var tempUnits, temp, setpoint;
+        	t = 0;
         	
         	function findLS(selected_start, selected_end, in_pointArray) {
         		
@@ -152,11 +152,26 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		            	     //alert(data.mode);
 		            	     //temp_F = (9.0/5.0)*parseFloat(data.temp) + 32;
 		            	     //temp_F = temp_F.toFixed(2);
-		            	     temp_C = (5.0/9.0)*(parseFloat(data.temp) - 32);
-		            	     temp_C = temp_C.toFixed(2);
+		            	     //temp_C = (5.0/9.0)*(parseFloat(data.temp) - 32);
+		            	     //temp_C = temp_C.toFixed(2);
 		            	     
 		            	     jQuery('#tempResponse').html(data.temp);
-		            	     jQuery('#tempResponse_C').html(temp_C)
+		            	     
+		            	     if (data.tempUnits == "F") {
+		            	     	jQuery('#tempResponseUnits').html("&#176F");
+		            	     	jQuery('#setpointResponseUnits').html("&#176F");
+		            	     	jQuery('#k_paramResponseUnits').html("%/&#176F");
+		            	     	jQuery('#setpointInputUnits').html("&#176F");
+		            	     	jQuery('#k_paramInputUnits').html("%/&#176F");
+		            	     }		            	     	
+		            	     else {
+		            	     	jQuery('#tempResponseUnits').html("&#176C");
+		            	     	jQuery('#setpointResponseUnits').html("&#176C");
+		            	     	jQuery('#k_paramResponseUnits').html("%/&#176C");
+		            	     	jQuery('#setpointInputUnits').html("&#176C");
+		            	     	jQuery('#k_paramInputUnits').html("%/&#176C");
+		            	     }
+		            	     	
 		            	     jQuery('#modeResponse').html(data.mode);
 		            	     jQuery('#setpointResponse').html(data.set_point);
 		            	     jQuery('#dutycycleResponse').html(parseFloat(data.duty_cycle).toFixed(2));
@@ -190,7 +205,7 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		            	     	heatdataarray.shift();
 		            	     }
 		            	     
-		            	     t += parseFloat(data.elapsed)
+		            	     t += parseFloat(data.elapsed);
 		            	     
 		            	     jQuery('#windowSizeText').change(function(){tempdataarray=[];heatdataarray=[];t = 0;});
 		            	     
@@ -399,12 +414,9 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 	    	<p align=center style="font-size: large;text-decoration: underline;">Current Status</p> 
 	     	<table>
 	     		<tr>
-			        <td align=right>Temperature(F): </td>
+			        <td align=right>Temperature: </td>
 			        <td id="tempResponse" align=right>temp</td>
-			        <td>&#176F</td> 
-			        <td align=right>Temperature(C): </td>
-			        <td id="tempResponse_C" align=right>temp</td>
-			        <td>&#176C</td> 
+			        <td id="tempResponseUnits">&#176F</td> 
 		        </tr>
 		        <tr>
 			        <td align=right>Mode: </td>
@@ -413,10 +425,10 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		        <tr>
 		    		<td align=right>Set Point: </td>
 		    		<td id="setpointResponse" align=right>0</td>
-		    		<td>&#176F</td>    	
+		    		<td id="setpointResponseUnits">&#176F</td>    	
 		    		<td align=right>PID Kc parameter </td> 
 		    		<td id="k_paramResponse">0</td>
-		    		<td>%/&#176F</td>
+		    		<td id="k_paramResponseUnits">%/&#176F</td>
 	    		<tr>
 	    			<td align=right>Duty Cycle: </td>
 	    			<td id="dutycycleResponse" align=right>50</td>	
@@ -457,12 +469,12 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		    			<td>
 		    				<input type="text" name="setpoint"  maxlength = "4" size ="4" value=$set_point style="text-align: right;"/> 
 		    			</td>
-		    			<td>&#176F</td>
+		    			<td id="setpointInputUnits">&#176F</td>
 		    			<td align=right>Pid Kc parameter: </td> 
 	    		        <td>
 	    					<input type="text" name="k"  maxlength = "6" size ="6" value=$k_param style="text-align: right;"/> <br>
 	    				</td>
-	    				<td>%/&#176F</td>
+	    				<td id="k_paramInputUnits">%/&#176F</td>
 	    			</tr>
 	    			<tr>
 	    				<td align=right>Duty Cycle: </td>
