@@ -5,4 +5,9 @@
 	<!-- Units C (Celsius) or F (Fahrenheit) -->
 	<!-- Note: Default is F for Android app which can switch between F and C-->
 	<Temp_Units>F</Temp_Units>
+
+	<!-- Themes. You can add a theme by making a folder in <root>/themes/<your_theme> -->
+	<!-- your_theme will then have to be the folder in themes. -->
+
+	<!-- <Theme>my_theme</Theme>
 </Config>

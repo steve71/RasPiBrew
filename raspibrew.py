@@ -405,6 +405,11 @@ if __name__ == '__main__':
         "/getstatus", "getstatus")
 
     render = web.template.render("/var/www/templates/")
+    root = getRootXML()
+    for theme in root.iter('Theme'):
+      theme = str(theme.text)
+      render = web.template.render("/var/www/themes/" + theme)
+
 
     app = web.application(urls, globals()) 
     
