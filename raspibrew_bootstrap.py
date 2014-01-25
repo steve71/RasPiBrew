@@ -52,13 +52,13 @@ class param:
 def index():
     if request.method == 'GET':
         #render main page
-        return render_template("raspibrew_flask.html", mode = param.mode, set_point = param.set_point, \
+        return render_template("raspibrew_bootstrap.html", mode = param.mode, set_point = param.set_point, \
                                duty_cycle = param.duty_cycle, cycle_time = param.cycle_time, \
                                k_param = param.k_param, i_param = param.i_param, d_param = param.d_param)
         
     else: #request.method == 'POST'
         # get command from web browser or Android   
-        #print request.form
+        print request.form
         param.mode = request.form['mode'] 
         param.set_point = float(request.form['setpoint'])
         param.duty_cycle = float(request.form['dutycycle']) #is boil duty cycle if mode == "boil"
