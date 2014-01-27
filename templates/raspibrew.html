@@ -1,10 +1,5 @@
-$def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-"http://www.w3.org/TR/html4/loose.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml">
-
+<!DOCTYPE html>
+<html>
     <head>
     	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <title>RasPi Brew Temperature Controller</title>
@@ -93,7 +88,6 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
 		    		<td id="setpointResponseUnits">&#176F</td>    	
 		    		<td align=right>PID Kc parameter </td> 
 		    		<td id="k_paramResponse">0</td>
-		    		<td id="k_paramResponseUnits">%/&#176F</td>
 	    		<tr>
 	    			<td align=right>Duty Cycle: </td>
 	    			<td id="dutycycleResponse" align=right>50</td>	
@@ -115,53 +109,55 @@ $def with (mode, set_point, duty_cycle, cycle_time, k_param, i_param, d_param)
         <p align=center style="font-size: large;text-decoration: underline;">Command</p>
 	    <div class="controlPanel" align=center>
     		<form id = "controlPanelForm" method="post">
-    			$if mode == "auto":
+    			{% if mode == "auto" %}
 		    		<input class="modeclass" type="radio" name="mode" value="auto" checked/> Auto
-		    	$else: 
+		    	{% else %} 
 		    	    <input class="modeclass" type="radio" name="mode" value="auto"/> Auto
-		    	$if mode == "manual":
+		    	{% endif %}
+		    	{% if mode == "manual" %}
 		    		<input class="modeclass" type="radio" name="mode" value="manual" checked/> Manual
-		        $else:
+		        {% else %}
 		        	<input class="modeclass" type="radio" name="mode" value="manual"/> Manual
-		        $if mode == "off":
+		        {% endif %}
+		        {% if mode == "off" %}
 		    		<input id="off" class="modeclass" type="radio" name="mode" value="off" checked/> Off <br> <br>
-		        $else:
+		        {% else %}
 		        	<input class="modeclass" type="radio" name="mode" value="off"/> Off <br> <br>
+		    	{% endif %}
 		    	
 		    	<table>
 		    		<tr>
 		    			<td align=right>Set Point: </td>
 		    			<td>
-		    				<input type="text" name="setpoint"  maxlength = "4" size ="4" value=$set_point style="text-align: right;"/> 
+		    				<input type="text" name="setpoint"  maxlength = "4" size ="4" value={{set_point}} style="text-align: right;"/> 
 		    			</td>
 		    			<td id="setpointInputUnits">&#176F</td>
 		    			<td align=right>Pid Kc parameter: </td> 
 	    		        <td>
-	    					<input type="text" name="k"  maxlength = "6" size ="6" value=$k_param style="text-align: right;"/> <br>
+	    					<input type="text" name="k"  maxlength = "6" size ="6" value={{k_param}} style="text-align: right;"/> <br>
 	    				</td>
-	    				<td id="k_paramInputUnits">%/&#176F</td>
 	    			</tr>
 	    			<tr>
 	    				<td align=right>Duty Cycle: </td>
 	    				<td>
-	    					<input id="dutycycle" type="text" name="dutycycle"  maxlength = "4" size ="4" value=$duty_cycle style="text-align: right;"/> 
+	    					<input id="dutycycle" type="text" name="dutycycle"  maxlength = "4" size ="4" value={{duty_cycle}} style="text-align: right;"/> 
 	    				</td>
 	    				<td>%</td>
 	    				<td align=right>PID Ti parameter: </td> 
 	    		        <td>
-	    					<input type="text" name="i"  maxlength = "6" size ="6" value=$i_param style="text-align: right;"/> <br>
+	    					<input type="text" name="i"  maxlength = "6" size ="6" value={{i_param}} style="text-align: right;"/> <br>
 	    				</td>
 	    				<td>secs</td>
 	    			</tr>
 	    			<tr>
 	    				<td align=right>Cycle Time: </td>
 	    				<td>
-	    					<input type="text" name="cycletime"  maxlength = "4" size ="4" value=$cycle_time style="text-align: right;"/>   
+	    					<input type="text" name="cycletime"  maxlength = "4" size ="4" value={{cycle_time}} style="text-align: right;"/>   
 	    			   </td>
 	    			   <td style="width:50px">secs</td>
 	    			   <td align=right>PID Td parameter:</td> 
 	    		        <td>
-	    					<input type="text" name="d"  maxlength = "6" size ="6" value=$d_param style="text-align: right;"/> 
+	    					<input type="text" name="d"  maxlength = "6" size ="6" value={{d_param}} style="text-align: right;"/> 
 	    				</td>
 	    				<td>secs</td>
 	    			</tr>

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2012 Stephen P. Smith
+# Copyright (c) 2012-2014 Stephen P. Smith
 #
 # Permission is hereby granted, free of charge, to any person obtaining 
 # a copy of this software and associated documentation files 
@@ -23,12 +23,17 @@
 from multiprocessing import Process, Pipe, Queue, current_process
 from subprocess import Popen, PIPE, call
 from datetime import datetime
-import web, time, random, json, serial, os
+import time, random, serial, os
 from smbus import SMBus
 import RPi.GPIO as GPIO
 from pid import pidpy as PIDController
 import xml.etree.ElementTree as ET
+from flask import Flask, render_template, request, jsonify
 
+global parent_conn, statusQ
+
+app = Flask(__name__, template_folder='templates')
+#url_for('static', filename='raspibrew.css')
 
 class param:
     mode = "off"
@@ -41,95 +46,56 @@ class param:
     k_param = 44
     i_param = 165
     d_param = 4
-
-#global hook for communication between web POST and temp control process as well as web GET and temp control process
-def add_global_hook(parent_conn, statusQ):
-    
-    g = web.storage({"parent_conn" : parent_conn, "statusQ" : statusQ})
-    def _wrapper(handler):
-        web.ctx.globals = g
-        return handler()
-    return _wrapper
-            
-
-class raspibrew: 
-    def __init__(self):
-                
-        self.mode = param.mode
-        self.cycle_time = param.cycle_time
-        self.duty_cycle = param.duty_cycle
-        self.set_point = param.set_point
-        self.boil_manage_temp = param.boil_manage_temp
-        self.num_pnts_smooth = param.num_pnts_smooth
-        self.k_param = param.k_param
-        self.i_param = param.i_param
-        self.d_param = param.d_param
+                     
+# main web page    
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'GET':
+        #render main page
+        return render_template("raspibrew_flask.html", mode = param.mode, set_point = param.set_point, \
+                               duty_cycle = param.duty_cycle, cycle_time = param.cycle_time, \
+                               k_param = param.k_param, i_param = param.i_param, d_param = param.d_param)
         
-    # main web page    
-    def GET(self):
-       
-        return render.raspibrew(self.mode, self.set_point, self.duty_cycle, self.cycle_time, \
-                                self.k_param,self.i_param,self.d_param)
-    
-    # get command from web browser or Android    
-    def POST(self):
-        data = web.data()
-        datalist = data.split("&")
-        for item in datalist:
-            datalistkey = item.split("=")
-            if datalistkey[0] == "mode":
-                self.mode = datalistkey[1]
-            if datalistkey[0] == "setpoint":
-                self.set_point = float(datalistkey[1])
-            if datalistkey[0] == "dutycycle": #is boil duty cycle if mode == "boil"
-                self.duty_cycle = float(datalistkey[1])
-            if datalistkey[0] == "cycletime":
-                self.cycle_time = float(datalistkey[1])
-            if datalistkey[0] == "boilManageTemp":
-                self.boil_manage_temp = float(datalistkey[1])
-            if datalistkey[0] == "numPntsSmooth":
-                self.num_pnts_smooth = int(datalistkey[1])
-            if datalistkey[0] == "k":
-                self.k_param = float(datalistkey[1])
-            if datalistkey[0] == "i":
-                self.i_param = float(datalistkey[1])
-            if datalistkey[0] == "d":
-                self.d_param = float(datalistkey[1])
+    else: #request.method == 'POST'
+        # get command from web browser or Android   
+        #print request.form
+        param.mode = request.form['mode'] 
+        param.set_point = float(request.form['setpoint'])
+        param.duty_cycle = float(request.form['dutycycle']) #is boil duty cycle if mode == "boil"
+        param.cycle_time = float(request.form['cycletime'])
+        param.k = float(request.form['k'])
+        param.i = float(request.form['i'])
+        param.d = float(request.form['d'])
         
         #send to main temp control process 
         #if did not receive variable key value in POST, the param class default is used
-        web.ctx.globals.parent_conn.send([self.mode, self.cycle_time, self.duty_cycle, self.set_point, \
-                              self.boil_manage_temp, self.num_pnts_smooth, self.k_param, self.i_param, self.d_param])  
+        parent_conn.send([param.mode, param.cycle_time, param.duty_cycle, param.set_point, \
+                              param.boil_manage_temp, param.num_pnts_smooth, param.k_param, param.i_param, param.d_param])  
+        
+        return 'OK'
 
 #get status from RasPiBrew using firefox web browser
-class getstatus:
-    
-    def __init__(self):
-        pass    
-
-    def GET(self):
-                    
-        #blocking receive - current status
-        temp, tempUnits, elapsed, mode, cycle_time, duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, \
-        k_param, i_param, d_param = web.ctx.globals.statusQ.get() 
+@app.route('/getstatus') #only GET
+def getstatus():          
+    #blocking receive - current status
+    temp, tempUnits, elapsed, mode, cycle_time, duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, \
+    k_param, i_param, d_param = statusQ.get() 
             
-        out = json.dumps({"temp" : temp,
-                     "tempUnits" : tempUnits,
-                       "elapsed" : elapsed,
-                          "mode" : mode,
-                    "cycle_time" : cycle_time,
-                    "duty_cycle" : duty_cycle,
-                     "set_point" : set_point,
-              "boil_manage_temp" : boil_manage_temp,
-               "num_pnts_smooth" : num_pnts_smooth,
-                       "k_param" : k_param,
-                       "i_param" : i_param,
-                       "d_param" : d_param})  
-        return out
-       
-    def POST(self):
-        pass
+    out = {"temp" : temp,
+                 "tempUnits" : tempUnits,
+                   "elapsed" : elapsed,
+                      "mode" : mode,
+                "cycle_time" : cycle_time,
+                "duty_cycle" : duty_cycle,
+                 "set_point" : set_point,
+          "boil_manage_temp" : boil_manage_temp,
+           "num_pnts_smooth" : num_pnts_smooth,
+                   "k_param" : k_param,
+                   "i_param" : i_param,
+                   "d_param" : d_param} 
 
+    return jsonify(**out)
+       
 # Retrieve root element from config.xml for parsing
 def getRootXML():
     tree = ET.parse('config.xml')
@@ -310,10 +276,6 @@ def tempControlProc(mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, bo
             if readytemp == True:        
                 if mode == "auto":
                     #calculate PID every cycle - always get latest temperature
-                    if (tempUnits == 'F'):
-                        print "Temp F MA %.2f" % temp_ma
-                    else:
-                        print "Temp C MA %.2f" % temp_ma
                     duty_cycle = pid.calcPID_reg4(temp_ma, set_point, True)
                     #send to heat process every cycle
                     parent_conn_heat.send([cycle_time, duty_cycle])             
@@ -333,11 +295,8 @@ def tempControlProc(mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, bo
                 while (statusQ.qsize() >= 2):
                     statusQ.get() #remove old status 
                    
-                if (tempUnits == 'F'): 
-                    print "Temp: %3.2f deg F, Heat Output: %3.1f%%" % (temp, duty_cycle)
-                else:
-                    print "Temp: %3.2f deg C, Heat Output: %3.1f%%" % (temp, duty_cycle)
-                                      
+                print "Current Temp: %3.2f deg %s, Temp (ma): %3.2f deg %s, Heat Output: %3.1f%%" \
+                                                        % (temp, tempUnits, temp_ma, tempUnits, duty_cycle)                  
                 readytemp == False   
                 
             while parent_conn_heat.poll(): #Poll Heat Process Pipe
@@ -400,18 +359,6 @@ if __name__ == '__main__':
     call(["modprobe", "i2c-bcm2708"])
     call(["modprobe", "i2c-dev"])
     
-    urls = ("/", "raspibrew",
-        "/getstatus", "getstatus")
-
-    render = web.template.render("/var/www/templates/")
-    root = getRootXML()
-    for theme in root.iter('Theme'):
-      theme = str(theme.text)
-      render = web.template.render("/var/www/themes/" + theme)
-
-
-    app = web.application(urls, globals()) 
-    
     statusQ = Queue(2) #blocking queue      
     parent_conn, child_conn = Pipe()
     p = Process(name = "tempControlProc", target=tempControlProc, args=(param.mode, param.cycle_time, param.duty_cycle, param.boil_duty_cycle, \
@@ -419,9 +366,9 @@ if __name__ == '__main__':
                                                               param.k_param, param.i_param, param.d_param, \
                                                               statusQ, child_conn))
     p.start()
+    app.debug = True 
+    app.run(use_reloader=False, host='0.0.0.0')
     
-    app.add_processor(add_global_hook(parent_conn, statusQ))
-     
-    app.run()
+    
 
 
