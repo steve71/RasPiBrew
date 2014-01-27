@@ -52,7 +52,7 @@ class param:
 def index():
     if request.method == 'GET':
         #render main page
-        return render_template("raspibrew_flask.html", mode = param.mode, set_point = param.set_point, \
+        return render_template("raspibrew.html", mode = param.mode, set_point = param.set_point, \
                                duty_cycle = param.duty_cycle, cycle_time = param.cycle_time, \
                                k_param = param.k_param, i_param = param.i_param, d_param = param.d_param)
         
