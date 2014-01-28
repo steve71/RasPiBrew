@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Config>
-    <!-- Temperature Sensor Id -->
+	<!-- Place templates (themes) in templates folder -->
+	<!-- The static folder must contain the corresponding css and js files -->
+	<Template>raspibrew.html</Template>
+	<!-- Temperature Sensor Id -->
 	<Temp_Sensor_Id>28-0000037eb5c0</Temp_Sensor_Id>
 	<!-- Units C (Celsius) or F (Fahrenheit) -->
 	<!-- Note: Default is F for Android app which can switch between F and C-->
 	<Temp_Units>F</Temp_Units>
-
-	<!-- Themes. You can add a theme by making a folder in <root>/themes/<your_theme> -->
-	<!-- your_theme will then have to be the folder in themes. -->
-
-	<!-- <Theme>my_theme</Theme> -->
 </Config>

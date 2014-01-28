@@ -30,7 +30,7 @@ from pid import pidpy as PIDController
 import xml.etree.ElementTree as ET
 from flask import Flask, render_template, request, jsonify
 
-global parent_conn, statusQ
+global parent_conn, statusQ, xml_root, template_name 
 
 app = Flask(__name__, template_folder='templates')
 #url_for('static', filename='raspibrew.css')
@@ -52,7 +52,7 @@ class param:
 def index():
     if request.method == 'GET':
         #render main page
-        return render_template("raspibrew.html", mode = param.mode, set_point = param.set_point, \
+        return render_template(template_name, mode = param.mode, set_point = param.set_point, \
                                duty_cycle = param.duty_cycle, cycle_time = param.cycle_time, \
                                k_param = param.k_param, i_param = param.i_param, d_param = param.d_param)
         
@@ -96,12 +96,6 @@ def getstatus():
 
     return jsonify(**out)
        
-# Retrieve root element from config.xml for parsing
-def getRootXML():
-    tree = ET.parse('config.xml')
-    root = tree.getroot()
-    return root
-
 # Retrieve temperature from DS18B20 temperature sensor
 def tempData1Wire(tempSensorId):
     
@@ -119,12 +113,11 @@ def gettempProc(conn):
     p = current_process()
     print 'Starting:', p.name, p.pid
     
-    root = getRootXML()
     tempSensorIdList = [];
-    for tempSensorId in root.iter('Temp_Sensor_Id'):
+    for tempSensorId in xml_root.iter('Temp_Sensor_Id'):
         tempSensorIdList.append(tempSensorId.text.strip())
     
-    #tempSensorId = root.find('Temp_Sensor_Id').text.strip()
+    #tempSensorId = xml_root.find('Temp_Sensor_Id').text.strip()
     
     while (True):
         t = time.time()
@@ -222,8 +215,7 @@ def tempControlProc(mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, bo
         temp_ma_list = []
         manage_boil_trigger = False
         
-        root = getRootXML()
-        tempUnits = root.find('Temp_Units').text.strip()
+        tempUnits = xml_root.find('Temp_Units').text.strip()
         
         while (True):
             readytemp = False
@@ -348,8 +340,7 @@ def tempControlProc(mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, bo
                     parent_conn_heat.send([cycle_time, duty_cycle])
                 readyPOST = False
             time.sleep(.01)
-                    
-                    
+                                
 if __name__ == '__main__':
     
     os.chdir("/var/www")
@@ -358,6 +349,11 @@ if __name__ == '__main__':
     call(["modprobe", "w1-therm"])
     call(["modprobe", "i2c-bcm2708"])
     call(["modprobe", "i2c-dev"])
+    
+    # Retrieve root element from config.xml for parsing
+    tree = ET.parse('config.xml')
+    xml_root = tree.getroot()
+    template_name = xml_root.find('Template').text.strip()
     
     statusQ = Queue(2) #blocking queue      
     parent_conn, child_conn = Pipe()
