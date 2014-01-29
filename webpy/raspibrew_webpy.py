@@ -52,7 +52,7 @@ def add_global_hook(parent_conn, statusQ):
     return _wrapper
             
 
-class raspibrew: 
+class raspibrew_webpy: 
     def __init__(self):
                 
         self.mode = param.mode
@@ -68,7 +68,7 @@ class raspibrew:
     # main web page    
     def GET(self):
        
-        return render.raspibrew(self.mode, self.set_point, self.duty_cycle, self.cycle_time, \
+        return render.raspibrew_webpy(self.mode, self.set_point, self.duty_cycle, self.cycle_time, \
                                 self.k_param,self.i_param,self.d_param)
     
     # get command from web browser or Android    
@@ -400,7 +400,7 @@ if __name__ == '__main__':
     call(["modprobe", "i2c-bcm2708"])
     call(["modprobe", "i2c-dev"])
     
-    urls = ("/", "raspibrew",
+    urls = ("/", "raspibrew_webpy",
         "/getstatus", "getstatus")
 
     render = web.template.render("/var/www/templates/")
