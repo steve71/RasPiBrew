@@ -21,6 +21,7 @@
 
 
 from multiprocessing import Process, Pipe, Queue, current_process
+from Queue import Full
 from subprocess import Popen, PIPE, call
 from datetime import datetime
 import time, random, serial, os
@@ -36,77 +37,80 @@ global xml_root, template_name
 app = Flask(__name__, template_folder='templates')
 #url_for('static', filename='raspibrew.css')
 
-#parameters that are put into the temperature control process
+#Parameters that are used in the temperature control process
 class param:
-    mode = "off"
-    cycle_time = 2.0
-    duty_cycle = 0.0
-    boil_duty_cycle = 60 
-    set_point = 0.0
-    boil_manage_temp = 200
-    num_pnts_smooth = 5
-    k_param = 44
-    i_param = 165
-    d_param = 4
+    status = {
+        "temp" : "0",
+        "tempUnits" : "F",
+        "elapsed" : "0",
+        "mode" : "off",
+        "cycle_time" : 2.0,
+        "duty_cycle" : 0.0,
+        "boil_duty_cycle" : 60,
+        "set_point" : 0.0,
+        "boil_manage_temp" : 200,
+        "num_pnts_smooth" : 5,
+        "k_param" : 44,
+        "i_param" : 165,
+        "d_param" : 4             
+    }
                       
 # main web page    
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
         #render main page
-        return render_template(template_name, mode = param.mode, set_point = param.set_point, \
-                               duty_cycle = param.duty_cycle, cycle_time = param.cycle_time, \
-                               k_param = param.k_param, i_param = param.i_param, d_param = param.d_param)
+        return render_template(template_name, mode = param.status["mode"], set_point = param.status["set_point"], \
+                               duty_cycle = param.status["duty_cycle"], cycle_time = param.status["cycle_time"], \
+                               k_param = param.status["k_param"], i_param = param.status["i_param"], \
+                               d_param = param.status["d_param"])
         
     else: #request.method == 'POST'
         # get command from web browser or Android   
         #print request.form
-        param.mode = request.form['mode'] 
-        param.set_point = float(request.form['setpoint'])
-        param.duty_cycle = float(request.form['dutycycle']) #is boil duty cycle if mode == "boil"
-        param.cycle_time = float(request.form['cycletime'])
-        param.k = float(request.form['k'])
-        param.i = float(request.form['i'])
-        param.d = float(request.form['d'])
-        
+        param.status["mode"] = request.form["mode"] 
+        param.status["set_point"] = float(request.form["setpoint"])
+        param.status["duty_cycle"] = float(request.form["dutycycle"]) #is boil duty cycle if mode == "boil"
+        param.status["cycle_time"] = float(request.form["cycletime"])
+        param.status["k_param"] = float(request.form["k"])
+        param.status["i_param"] = float(request.form["i"])
+        param.status["d_param"] = float(request.form["d"])
+                
         #send to main temp control process 
         #if did not receive variable key value in POST, the param class default is used
-        parent_conn.send([param.mode, param.cycle_time, param.duty_cycle, param.set_point, \
-                              param.boil_manage_temp, param.num_pnts_smooth, param.k_param, param.i_param, param.d_param])  
+        parent_conn.send(param.status)  
         
         return 'OK'
     
 @app.route('/postparamsB', methods=['POST'])
 def postparamsB():
-    param.mode = request.form['mode'] 
-    param.set_point = float(request.form['setpoint'])
-    param.duty_cycle = float(request.form['dutycycle']) #is boil duty cycle if mode == "boil"
-    param.cycle_time = float(request.form['cycletime'])
-    param.k = float(request.form['k'])
-    param.i = float(request.form['i'])
-    param.d = float(request.form['d'])
+    param.status["mode"] = request.form["mode"] 
+    param.status["set_point"] = float(request.form["setpoint"])
+    param.status["duty_cycle"] = float(request.form["dutycycle"]) #is boil duty cycle if mode == "boil"
+    param.status["cycle_time"] = float(request.form["cycletime"])
+    param.status["k_param"] = float(request.form["k"])
+    param.status["i_param"] = float(request.form["i"])
+    param.status["d_param"] = float(request.form["d"])
         
     #send to main temp control process 
     #if did not receive variable key value in POST, the param class default is used
-    parent_connB.send([param.mode, param.cycle_time, param.duty_cycle, param.set_point, \
-                              param.boil_manage_temp, param.num_pnts_smooth, param.k_param, param.i_param, param.d_param])  
+    parent_connB.send(param.status)  
         
     return 'OK'
 
 @app.route('/postparamsC', methods=['POST'])
 def postparamsC():
-    param.mode = request.form['mode'] 
-    param.set_point = float(request.form['setpoint'])
-    param.duty_cycle = float(request.form['dutycycle']) #is boil duty cycle if mode == "boil"
-    param.cycle_time = float(request.form['cycletime'])
-    param.k = float(request.form['k'])
-    param.i = float(request.form['i'])
-    param.d = float(request.form['d'])
+    param.status["mode"] = request.form["mode"] 
+    param.status["set_point"] = float(request.form["setpoint"])
+    param.status["duty_cycle"] = float(request.form["dutycycle"]) #is boil duty cycle if mode == "boil"
+    param.status["cycle_time"] = float(request.form["cycletime"])
+    param.status["k_param"] = float(request.form["k"])
+    param.status["i_param"] = float(request.form["i"])
+    param.status["d_param"] = float(request.form["d"])
         
     #send to main temp control process 
     #if did not receive variable key value in POST, the param class default is used
-    parent_connC.send([param.mode, param.cycle_time, param.duty_cycle, param.set_point, \
-                              param.boil_manage_temp, param.num_pnts_smooth, param.k_param, param.i_param, param.d_param])  
+    parent_connC.send(param.status)  
         
     return 'OK'
     
@@ -115,67 +119,19 @@ def postparamsC():
 @app.route('/getstatus') #only GET
 def getstatus():          
     #blocking receive - current status
-    temp, tempUnits, elapsed, mode, cycle_time, duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, \
-    k_param, i_param, d_param = statusQ.get() 
-            
-    out = {"temp" : temp,
-                 "tempUnits" : tempUnits,
-                   "elapsed" : elapsed,
-                      "mode" : mode,
-                "cycle_time" : cycle_time,
-                "duty_cycle" : duty_cycle,
-                 "set_point" : set_point,
-          "boil_manage_temp" : boil_manage_temp,
-           "num_pnts_smooth" : num_pnts_smooth,
-                   "k_param" : k_param,
-                   "i_param" : i_param,
-                   "d_param" : d_param} 
-
-    return jsonify(**out)
+    return jsonify(**statusQ.get())
 
 #get status from RasPiBrew using firefox web browser
 @app.route('/getstatusB') #only GET
 def getstatusB():          
-    #blocking receive - current status
-    temp, tempUnits, elapsed, mode, cycle_time, duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, \
-    k_param, i_param, d_param = statusQ_B.get() 
-            
-    out = {"temp" : temp,
-                 "tempUnits" : tempUnits,
-                   "elapsed" : elapsed,
-                      "mode" : mode,
-                "cycle_time" : cycle_time,
-                "duty_cycle" : duty_cycle,
-                 "set_point" : set_point,
-          "boil_manage_temp" : boil_manage_temp,
-           "num_pnts_smooth" : num_pnts_smooth,
-                   "k_param" : k_param,
-                   "i_param" : i_param,
-                   "d_param" : d_param} 
-
-    return jsonify(**out)
+    #blocking receive - current status            
+    return jsonify(**statusQ_B.get())
 
 #get status from RasPiBrew using firefox web browser
 @app.route('/getstatusC') #only GET
 def getstatusC():          
     #blocking receive - current status
-    temp, tempUnits, elapsed, mode, cycle_time, duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, \
-    k_param, i_param, d_param = statusQ_C.get() 
-            
-    out = {"temp" : temp,
-                 "tempUnits" : tempUnits,
-                   "elapsed" : elapsed,
-                      "mode" : mode,
-                "cycle_time" : cycle_time,
-                "duty_cycle" : duty_cycle,
-                 "set_point" : set_point,
-          "boil_manage_temp" : boil_manage_temp,
-           "num_pnts_smooth" : num_pnts_smooth,
-                   "k_param" : k_param,
-                   "i_param" : i_param,
-                   "d_param" : d_param} 
-
-    return jsonify(**out)
+    return jsonify(**statusQ_C.get())
        
 # Retrieve temperature from DS18B20 temperature sensor
 def tempData1Wire(tempSensorId):
@@ -264,9 +220,48 @@ def heatProcGPIO(cycle_time, duty_cycle, pinNum, conn):
                 time.sleep(on_time)
                 GPIO.output(pinNum, False)
                 time.sleep(off_time)
+
+def unPackParamInitAndPost(paramStatus):
+    #temp = paramStatus["temp"]
+    #tempUnits = paramStatus["tempUnits"]
+    #elapsed = paramStatus["elapsed"]
+    mode = paramStatus["mode"]
+    cycle_time = paramStatus["cycle_time"]
+    duty_cycle = paramStatus["duty_cycle"]
+    boil_duty_cycle = paramStatus["boil_duty_cycle"] 
+    set_point = paramStatus["set_point"] 
+    boil_manage_temp = paramStatus["boil_manage_temp"]
+    num_pnts_smooth = paramStatus["num_pnts_smooth"]
+    k_param = paramStatus["k_param"]
+    i_param = paramStatus["i_param"] 
+    d_param = paramStatus["d_param"] 
+    
+    return mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, \
+           k_param, i_param, d_param
            
+def packParamGet(temp, tempUnits, elapsed, mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, \
+                                 boil_manage_temp, num_pnts_smooth, k_param, i_param, d_param):
+    param.status["temp"] = temp
+    param.status["tempUnits"] = tempUnits
+    param.status["elapsed"] = elapsed
+    param.status["mode"] = mode
+    param.status["cycle_time"] = cycle_time
+    param.status["duty_cycle"] = duty_cycle
+    param.status["boil_duty_cycle"] = boil_duty_cycle
+    param.status["set_point"] = set_point
+    param.status["boil_manage_temp"] = boil_manage_temp
+    param.status["num_pnts_smooth"] = num_pnts_smooth
+    param.status["k_param"] = k_param
+    param.status["i_param"] = i_param
+    param.status["d_param"] = d_param
+    
+    return param.status
+        
 # Main Temperature Control Process
-def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, k_param, i_param, d_param, statusQ, conn):
+def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ, conn):
+    
+        mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, \
+        k_param, i_param, d_param = unPackParamInitAndPost(paramStatus)
     
         #initialize LCD
         if LCD:
@@ -301,6 +296,8 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, mode, cycle_time, du
         manage_boil_trigger = False
         
         tempUnits = xml_root.find('Temp_Units').text.strip()
+        
+        temp_ma = 0.0
         
         while (True):
             readytemp = False
@@ -365,9 +362,10 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, mode, cycle_time, du
                 
                 #put current status in queue    
                 try:
-                    statusQ.put([temp_str, tempUnits, elapsed, mode, cycle_time, duty_cycle, set_point, \
-                                 boil_manage_temp, num_pnts_smooth, k_param, i_param, d_param]) #GET request
-                except Queue.Full:
+                    paramStatus = packParamGet(temp_str, tempUnits, elapsed, mode, cycle_time, duty_cycle, \
+                            boil_duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, k_param, i_param, d_param)
+                    statusQ.put(paramStatus) #GET request
+                except Full:
                     pass
                          
                 while (statusQ.qsize() >= 2):
@@ -391,7 +389,10 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, mode, cycle_time, du
                                  
             readyPOST = False
             while conn.poll(): #POST settings - Received POST from web browser or Android device
-                mode, cycle_time, duty_cycle_temp, set_point, boil_manage_temp, num_pnts_smooth, k_param, i_param, d_param = conn.recv()
+                paramStatus = conn.recv()
+                mode, cycle_time, duty_cycle_temp, boil_duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, \
+                k_param, i_param, d_param = unPackParamInitAndPost(paramStatus)
+                
                 readyPOST = True
             if readyPOST == True:
                 if mode == "auto":
@@ -439,10 +440,7 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, mode, cycle_time, du
 def configTempControlProc(myTempSensorNum, LCD, pinNum, readOnly, statusQ, child_conn):
     
     p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensorNum, LCD, pinNum, readOnly, 
-                                                              param.mode, param.cycle_time, param.duty_cycle, param.boil_duty_cycle, \
-                                                              param.set_point, param.boil_manage_temp, param.num_pnts_smooth, \
-                                                              param.k_param, param.i_param, param.d_param, \
-                                                              statusQ, child_conn))
+                                                              param.status, statusQ, child_conn))
     return p
     
                                 
@@ -470,7 +468,6 @@ if __name__ == '__main__':
         pinList.append(int(pin.text.strip()))
     
     myTempSensorNum = 0
-    QueueList = []
     for tempSensorId in xml_root.iter('Temp_Sensor_Id'):
           
         if len(pinList) >= myTempSensorNum + 1:
