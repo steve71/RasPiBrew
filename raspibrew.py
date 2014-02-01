@@ -65,7 +65,7 @@ def index():
                                k_param = param.status["k_param"], i_param = param.status["i_param"], \
                                d_param = param.status["d_param"])
         
-    else: #request.method == 'POST'
+    else: #request.method == 'POST' (first temp sensor / backwards compatibility)
         # get command from web browser or Android   
         #print request.form
         param.status["mode"] = request.form["mode"] 
@@ -81,9 +81,11 @@ def index():
         parent_conn.send(param.status)  
         
         return 'OK'
+
+#post params (selectable temp sensor number)    
+@app.route('/postparams/<sensorNum>', methods=['POST'])
+def postparams(sensorNum=None):
     
-@app.route('/postparamsB', methods=['POST'])
-def postparamsB():
     param.status["mode"] = request.form["mode"] 
     param.status["set_point"] = float(request.form["setpoint"])
     param.status["duty_cycle"] = float(request.form["dutycycle"]) #is boil duty cycle if mode == "boil"
@@ -91,47 +93,42 @@ def postparamsB():
     param.status["k_param"] = float(request.form["k"])
     param.status["i_param"] = float(request.form["i"])
     param.status["d_param"] = float(request.form["d"])
-        
+            
     #send to main temp control process 
     #if did not receive variable key value in POST, the param class default is used
-    parent_connB.send(param.status)  
-        
-    return 'OK'
-
-@app.route('/postparamsC', methods=['POST'])
-def postparamsC():
-    param.status["mode"] = request.form["mode"] 
-    param.status["set_point"] = float(request.form["setpoint"])
-    param.status["duty_cycle"] = float(request.form["dutycycle"]) #is boil duty cycle if mode == "boil"
-    param.status["cycle_time"] = float(request.form["cycletime"])
-    param.status["k_param"] = float(request.form["k"])
-    param.status["i_param"] = float(request.form["i"])
-    param.status["d_param"] = float(request.form["d"])
-        
-    #send to main temp control process 
-    #if did not receive variable key value in POST, the param class default is used
-    parent_connC.send(param.status)  
+    if sensorNum == 1:
+        parent_conn.send(param.status)
+    elif sensorNum == 2:
+        parent_connB.send(param.status)
+    elif sensorNum == 3:
+        parent_connC.send(param.status)
+    else:
+        print "Sensor doesn't exist (POST)"
         
     return 'OK'
     
-
-#get status from RasPiBrew using firefox web browser
+#get status from RasPiBrew using firefox web browser (first temp sensor / backwards compatibility)
 @app.route('/getstatus') #only GET
-def getstatus():          
-    #blocking receive - current status
-    return jsonify(**statusQ.get())
-
-#get status from RasPiBrew using firefox web browser
-@app.route('/getstatusB') #only GET
 def getstatusB():          
-    #blocking receive - current status            
-    return jsonify(**statusQ_B.get())
+    #blocking receive - current status    
+    param.status = statusQ.get()        
+    return jsonify(**param.status)
 
-#get status from RasPiBrew using firefox web browser
-@app.route('/getstatusC') #only GET
-def getstatusC():          
+#get status from RasPiBrew using firefox web browser (selectable temp sensor)
+@app.route('/getstatus/<sensorNum>') #only GET
+def getstatus(sensorNum=None):          
     #blocking receive - current status
-    return jsonify(**statusQ_C.get())
+    if sensorNum == "1":
+        param.status = statusQ.get()
+    elif sensorNum == "2":
+        param.status = statusQ_B.get()
+    elif sensorNum == "3":
+        param.status = statusQ_C.get()
+    else:
+        print "Sensor doesn't exist (GET)"
+        param.status["temp"] = "-999"
+        
+    return jsonify(**param.status)
        
 # Retrieve temperature from DS18B20 temperature sensor
 def tempData1Wire(tempSensorId):
