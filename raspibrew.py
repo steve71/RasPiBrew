@@ -40,6 +40,7 @@ app = Flask(__name__, template_folder='templates')
 #Parameters that are used in the temperature control process
 class param:
     status = {
+        "numTempSensors" : 0,
         "temp" : "0",
         "tempUnits" : "F",
         "elapsed" : "0",
@@ -236,8 +237,10 @@ def unPackParamInitAndPost(paramStatus):
     return mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, \
            k_param, i_param, d_param
            
-def packParamGet(temp, tempUnits, elapsed, mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, \
+def packParamGet(numTempSensors, temp, tempUnits, elapsed, mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, \
                                  boil_manage_temp, num_pnts_smooth, k_param, i_param, d_param):
+    
+    param.status["numTempSensors"] = numTempSensors
     param.status["temp"] = temp
     param.status["tempUnits"] = tempUnits
     param.status["elapsed"] = elapsed
@@ -251,7 +254,7 @@ def packParamGet(temp, tempUnits, elapsed, mode, cycle_time, duty_cycle, boil_du
     param.status["k_param"] = k_param
     param.status["i_param"] = i_param
     param.status["d_param"] = d_param
-    
+
     return param.status
         
 # Main Temperature Control Process
@@ -293,6 +296,9 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
         manage_boil_trigger = False
         
         tempUnits = xml_root.find('Temp_Units').text.strip()
+        numTempSensors = 0
+        for tempSensorId in xml_root.iter('Temp_Sensor_Id'):
+            numTempSensors += 1
         
         temp_ma = 0.0
         
@@ -359,7 +365,7 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
                 
                 #put current status in queue    
                 try:
-                    paramStatus = packParamGet(temp_str, tempUnits, elapsed, mode, cycle_time, duty_cycle, \
+                    paramStatus = packParamGet(numTempSensors, temp_str, tempUnits, elapsed, mode, cycle_time, duty_cycle, \
                             boil_duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, k_param, i_param, d_param)
                     statusQ.put(paramStatus) #GET request
                 except Full:
@@ -496,7 +502,7 @@ if __name__ == '__main__':
             p.start()
             
         myTempSensorNum += 1
-            
+      
     app.debug = True 
     app.run(use_reloader=False, host='0.0.0.0')
     

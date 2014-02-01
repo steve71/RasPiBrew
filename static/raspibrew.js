@@ -135,15 +135,11 @@ function waitForMsg() {
 			if (data.tempUnits == "F") {
 				jQuery('#tempResponseUnits').html("&#176F");
 				jQuery('#setpointResponseUnits').html("&#176F");
-				jQuery('#k_paramResponseUnits').html("%/&#176F");
 				jQuery('#setpointInputUnits').html("&#176F");
-				jQuery('#k_paramInputUnits').html("%/&#176F");
 			} else {
 				jQuery('#tempResponseUnits').html("&#176C");
 				jQuery('#setpointResponseUnits').html("&#176C");
-				jQuery('#k_paramResponseUnits').html("%/&#176C");
 				jQuery('#setpointInputUnits').html("&#176C");
-				jQuery('#k_paramInputUnits').html("%/&#176C");
 			}
 
 			jQuery('#modeResponse').html(data.mode);

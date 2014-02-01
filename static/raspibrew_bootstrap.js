@@ -22,7 +22,7 @@
 //declare globals
 var t, tempdataarray, heatdataarray, setpointdataarray, dutyCycle, options_temp, options_heat, plot, gaugeDisplay, newGaugeDisplay;
 var capture_on = 1;
-var tempUnits, temp, setpoint;
+var numTempSensors, tempUnits, temp, setpoint;
 t = 0;
 
 $('.selectRow').click(function() {
@@ -122,7 +122,7 @@ function waitForMsg() {
 
 	jQuery.ajax({
 		type : "GET",
-		url : "/getstatus",
+		url : "/getstatus/1",
 		dataType : "json",
 		async : true,
 		cache : false,
@@ -135,27 +135,26 @@ function waitForMsg() {
 			//temp_F = temp_F.toFixed(2);
 			//temp_C = (5.0/9.0)*(parseFloat(data.temp) - 32);
 			//temp_C = temp_C.toFixed(2);
+			
+			numTempSensors = parseInt(data.numTempSensors);
 
-			jQuery('#tempResponse').html(data.temp);
-
+			jQuery('#dutyCycleUnits').html("%");
 			if (data.tempUnits == "F") {
 				jQuery('#tempResponseUnits').html("&#176F");
 				jQuery('#setpointResponseUnits').html("&#176F");
-				jQuery('#k_paramResponseUnits').html("%/&#176F");
 				jQuery('#setpointInputUnits').html("&#176F");
-				jQuery('#k_paramInputUnits').html("%/&#176F");
 			} else {
 				jQuery('#tempResponseUnits').html("&#176C");
 				jQuery('#setpointResponseUnits').html("&#176C");
-				jQuery('#k_paramResponseUnits').html("%/&#176C");
 				jQuery('#setpointInputUnits').html("&#176C");
-				jQuery('#k_paramInputUnits').html("%/&#176C");
 			}
 
+			jQuery('#tempResponse').html(data.temp);
 			jQuery('#modeResponse').html(data.mode);
 			jQuery('#setpointResponse').html(data.set_point);
-			jQuery('#dutycycleResponse').html(parseFloat(data.duty_cycle).toFixed(2));
-			dutyCycle = data.duty_cycle;
+			//jQuery('#dutycycleResponse').html(parseFloat(data.duty_cycle).toFixed(2));
+			jQuery('#dutycycleResponse').html(data.duty_cycle);
+			//dutyCycle = data.duty_cycle;
 			jQuery('#cycletimeResponse').html(data.cycle_time);
 			jQuery('#k_paramResponse').html(data.k_param);
 			jQuery('#i_paramResponse').html(data.i_param);
@@ -207,8 +206,77 @@ function waitForMsg() {
 			}
 		}
 	});
-
+	if (numTempSensors >= 2) {
+		jQuery.ajax({
+			type : "GET",
+			url : "/getstatus/2",
+			dataType : "json",
+			async : true,
+			cache : false,
+			timeout : 50000,
+	
+			success : function(data) {
+				
+				jQuery('#dutyCycleUnits2').html("%");
+				
+				if (data.tempUnits == "F") {
+					jQuery('#tempResponseUnits2').html("&#176F");
+					jQuery('#setpointResponseUnits2').html("&#176F");
+					jQuery('#setpointInputUnits2').html("&#176F");
+				} else {
+					jQuery('#tempResponseUnits2').html("&#176C");
+					jQuery('#setpointResponseUnits2').html("&#176C");
+					jQuery('#setpointInputUnits2').html("&#176C");
+				}
+	
+				jQuery('#tempResponse2').html(data.temp);
+				jQuery('#modeResponse2').html(data.mode);
+				jQuery('#setpointResponse2').html(data.set_point);
+				jQuery('#dutycycleResponse2').html(data.duty_cycle);
+				jQuery('#cycletimeResponse2').html(data.cycle_time);
+				jQuery('#k_paramResponse2').html(data.k_param);
+				jQuery('#i_paramResponse2').html(data.i_param);
+				jQuery('#d_paramResponse2').html(data.d_param);
+			}
+		});
+	}
+	if (numTempSensors >= 3) {
+		jQuery.ajax({
+			type : "GET",
+			url : "/getstatus/3",
+			dataType : "json",
+			async : true,
+			cache : false,
+			timeout : 50000,
+	
+			success : function(data) {
+				
+				jQuery('#dutyCycleUnits3').html("%");
+				
+				if (data.tempUnits == "F") {
+					jQuery('#tempResponseUnits3').html("&#176F");
+					jQuery('#setpointResponseUnits3').html("&#176F");
+					jQuery('#setpointInputUnits3').html("&#176F");
+				} else {
+					jQuery('#tempResponseUnits3').html("&#176C");
+					jQuery('#setpointResponseUnits3').html("&#176C");
+					jQuery('#setpointInputUnits3').html("&#176C");
+				}
+	
+				jQuery('#tempResponse3').html(data.temp);
+				jQuery('#modeResponse3').html(data.mode);
+				jQuery('#setpointResponse3').html(data.set_point);
+				jQuery('#dutycycleResponse3').html(data.duty_cycle);
+				jQuery('#cycletimeResponse3').html(data.cycle_time);
+				jQuery('#k_paramResponse3').html(data.k_param);
+				jQuery('#i_paramResponse3').html(data.i_param);
+				jQuery('#d_paramResponse3').html(data.d_param);
+			}
+		});
+	}
+	
 };
+
 jQuery(document).ready(function() {
 
 	jQuery('#stop').click(function() {
