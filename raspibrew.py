@@ -97,11 +97,14 @@ def postparams(sensorNum=None):
             
     #send to main temp control process 
     #if did not receive variable key value in POST, the param class default is used
-    if sensorNum == 1:
+    if sensorNum == "1":
+        print "got post to temp sensor 1"
         parent_conn.send(param.status)
-    elif sensorNum == 2:
+    elif sensorNum == "2":
+        print "got post to temp sensor 2"
         parent_connB.send(param.status)
-    elif sensorNum == 3:
+    elif sensorNum == "3":
+        print "got post to temp sensor 3"
         parent_connC.send(param.status)
     else:
         print "Sensor doesn't exist (POST)"

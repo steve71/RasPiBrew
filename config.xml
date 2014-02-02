@@ -2,7 +2,7 @@
 <Config>
 	<!-- Place templates (themes) in templates folder -->
 	<!-- The static folder must contain the corresponding css and js files -->
-	<Template>raspibrew.html</Template>
+	<Template>raspibrew_bootstrap.html</Template>
 	<!-- Use LCD - yes or no-->
 	<Use_LCD>yes</Use_LCD>
 	<!-- Temperature Sensor Id -->

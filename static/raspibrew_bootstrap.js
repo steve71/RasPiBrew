@@ -20,10 +20,9 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 //declare globals
-var t, tempdataarray, heatdataarray, setpointdataarray, dutyCycle, options_temp, options_heat, plot, gaugeDisplay, newGaugeDisplay;
+var timeElapsed, tempDataArray, heatDataArray, setpointDataArray, dutyCycle, options_temp, options_heat, plot, gaugeDisplay, newGaugeDisplay;
 var capture_on = 1;
 var numTempSensors, tempUnits, temp, setpoint;
-t = 0;
 
 $('.selectRow').click(function() {
 	$('.selectRow').removeClass("row-highlight");
@@ -117,8 +116,54 @@ function showTooltip(x, y, contents) {
 	}).appendTo("body").fadeIn(200);
 }
 
+function storeData(index, data) {
+
+	if (data.mode == "auto") {
+		//setpoint_C = (5.0/9.0)*(parseFloat(data.set_point) - 32);
+		setpointDataArray[index].push([timeElapsed[index], parseFloat(data.set_point)]);
+	} else {
+		setpointDataArray[index] = [];
+	}
+
+	tempDataArray[index].push([timeElapsed[index], parseFloat(data.temp)]);
+	heatDataArray[index].push([timeElapsed[index], parseFloat(data.duty_cycle)]);
+
+	//tempDataArray[0].push([i,parseFloat(data.temp)]);
+	//heatDataArray[0].push([i,parseFloat(data.duty_cycle)]);
+
+	while (tempDataArray[index].length > jQuery('#windowSizeText').val()) {
+		tempDataArray[index].shift();
+	}
+
+	while (heatDataArray[index].length > jQuery('#windowSizeText').val()) {
+		heatDataArray[index].shift();
+	}
+
+	timeElapsed[index] += parseFloat(data.elapsed);
+
+	jQuery('#windowSizeText').change(function() {
+		tempDataArray[index] = [];
+		heatDataArray[index] = [];
+		timeElapsed[index] = 0;
+	});
+}
+
+function plotData(index, data) {
+
+	if (data.mode == "auto") {
+		plot = jQuery.plot($("#tempplot"), [tempDataArray[index], setpointDataArray[index]], options_temp);
+	} else {
+		plot = jQuery.plot($("#tempplot"), [tempDataArray[index]], options_temp);
+	}
+	plot = jQuery.plot($("#heatplot"), [heatDataArray[index]], options_heat);
+	//plot.setData([dataarray]);
+	//plot.draw();
+}
+
 //long polling - wait for message
 function waitForMsg() {
+
+	var className;
 
 	jQuery.ajax({
 		type : "GET",
@@ -135,7 +180,7 @@ function waitForMsg() {
 			//temp_F = temp_F.toFixed(2);
 			//temp_C = (5.0/9.0)*(parseFloat(data.temp) - 32);
 			//temp_C = temp_C.toFixed(2);
-			
+
 			numTempSensors = parseInt(data.numTempSensors);
 
 			jQuery('#dutyCycleUnits').html("%");
@@ -162,45 +207,12 @@ function waitForMsg() {
 
 			//gaugeDisplay.setValue(parseFloat(data.temp));
 
-			if (data.mode == "auto") {
-				//setpoint_C = (5.0/9.0)*(parseFloat(data.set_point) - 32);
-				setpointdataarray.push([t, parseFloat(data.set_point)]);
-			} else {
-				setpointdataarray = [];
-			}
+			storeData(0, data);
 
-			tempdataarray.push([t, parseFloat(data.temp)]);
-			heatdataarray.push([t, parseFloat(data.duty_cycle)]);
-
-			//tempdataarray.push([i,parseFloat(data.temp)]);
-			//heatdataarray.push([i,parseFloat(data.duty_cycle)]);
-
-			while (tempdataarray.length > jQuery('#windowSizeText').val()) {
-				tempdataarray.shift();
-			}
-
-			while (heatdataarray.length > jQuery('#windowSizeText').val()) {
-				heatdataarray.shift();
-			}
-
-			t += parseFloat(data.elapsed);
-
-			jQuery('#windowSizeText').change(function() {
-				tempdataarray = [];
-				heatdataarray = [];
-				t = 0;
-			});
-
-			//i++;
 			if (capture_on == 1) {
-				if (data.mode == "auto") {
-					plot = jQuery.plot($("#tempplot"), [tempdataarray, setpointdataarray], options_temp);
-				} else {
-					plot = jQuery.plot($("#tempplot"), [tempdataarray], options_temp);
+				if ($('#firstRow').hasClass('row-highlight') == true) {
+					plotData(0, data);
 				}
-				plot = jQuery.plot($("#heatplot"), [heatdataarray], options_heat);
-				//plot.setData([dataarray]);
-				//plot.draw();
 				setTimeout('waitForMsg()', 1);
 				//in millisec
 			}
@@ -214,11 +226,11 @@ function waitForMsg() {
 			async : true,
 			cache : false,
 			timeout : 50000,
-	
+
 			success : function(data) {
-				
+
 				jQuery('#dutyCycleUnits2').html("%");
-				
+
 				if (data.tempUnits == "F") {
 					jQuery('#tempResponseUnits2').html("&#176F");
 					jQuery('#setpointResponseUnits2').html("&#176F");
@@ -228,7 +240,7 @@ function waitForMsg() {
 					jQuery('#setpointResponseUnits2').html("&#176C");
 					jQuery('#setpointInputUnits2').html("&#176C");
 				}
-	
+
 				jQuery('#tempResponse2').html(data.temp);
 				jQuery('#modeResponse2').html(data.mode);
 				jQuery('#setpointResponse2').html(data.set_point);
@@ -237,6 +249,14 @@ function waitForMsg() {
 				jQuery('#k_paramResponse2').html(data.k_param);
 				jQuery('#i_paramResponse2').html(data.i_param);
 				jQuery('#d_paramResponse2').html(data.d_param);
+
+				storeData(1, data);
+
+				if (capture_on == 1) {
+					if ($('#secondRow').hasClass('row-highlight') == true) {
+						plotData(1, data);
+					}
+				}
 			}
 		});
 	}
@@ -248,11 +268,11 @@ function waitForMsg() {
 			async : true,
 			cache : false,
 			timeout : 50000,
-	
+
 			success : function(data) {
-				
+
 				jQuery('#dutyCycleUnits3').html("%");
-				
+
 				if (data.tempUnits == "F") {
 					jQuery('#tempResponseUnits3').html("&#176F");
 					jQuery('#setpointResponseUnits3').html("&#176F");
@@ -262,7 +282,7 @@ function waitForMsg() {
 					jQuery('#setpointResponseUnits3').html("&#176C");
 					jQuery('#setpointInputUnits3').html("&#176C");
 				}
-	
+
 				jQuery('#tempResponse3').html(data.temp);
 				jQuery('#modeResponse3').html(data.mode);
 				jQuery('#setpointResponse3').html(data.set_point);
@@ -271,10 +291,18 @@ function waitForMsg() {
 				jQuery('#k_paramResponse3').html(data.k_param);
 				jQuery('#i_paramResponse3').html(data.i_param);
 				jQuery('#d_paramResponse3').html(data.d_param);
+
+				storeData(2, data);
+
+				if (capture_on == 1) {
+					if ($('#thirdRow').hasClass('row-highlight') == true) {
+						plotData(2, data);
+					}
+				}
 			}
 		});
 	}
-	
+
 };
 
 jQuery(document).ready(function() {
@@ -284,9 +312,9 @@ jQuery(document).ready(function() {
 	});
 	jQuery('#restart').click(function() {
 		capture_on = 1;
-		tempdataarray = [];
-		heatdataarray = [];
-		t = 0;
+		tempDataArray = [[],[],[]];
+		heatDataArray = [[],[],[]];
+		timeElapsed = [0,0,0];
 		waitForMsg();
 	});
 	//jQuery('#calcpid').click(function() {
@@ -295,12 +323,12 @@ jQuery(document).ready(function() {
 		var selected_start = ranges.xaxis.from;
 		var selected_end = ranges.xaxis.to;
 		var k_param, i_param, d_param, normalizedSlope, pointArray, m, b, deadTime;
-		[pointArray, m, b] = findLS(selected_start, selected_end, tempdataarray);
+		[pointArray, m, b] = findLS(selected_start, selected_end, tempDataArray[0]);
 		deadTime = pointArray[0][0];
 		normalizedSlope = m / jQuery('input:text[name=dutycycle]').val();
 		jQuery('#deadTime').html(deadTime);
 		jQuery('#normSlope').html(normalizedSlope);
-		plot = jQuery.plot($("#tempplot"), [tempdataarray, pointArray], options_temp);
+		plot = jQuery.plot($("#tempplot"), [tempDataArray[0], pointArray], options_temp);
 		k_param = 1.2 / (deadTime * normalizedSlope);
 		i_param = 2.0 * deadTime;
 		d_param = 0.5 * deadTime;
@@ -331,19 +359,58 @@ jQuery(document).ready(function() {
 
 		formdata = jQuery(this).serialize();
 
-		jQuery.ajax({
-			type : "POST",
-			data : formdata,
-			success : function(data) {
-			},
-		});
-		//reset plot
-		if (jQuery('#off').is(':checked') == false) {
-			tempdataarray = [];
-			heatdataarray = [];
-			setpointdataarray = [];
-			t = 0;
+		if ($('#firstRow').hasClass('row-highlight') == true) {
+
+			jQuery.ajax({
+				type : "POST",
+				url : "/postparams/1",
+				data : formdata,
+				success : function(data) {
+				},
+			});
+			//reset plot
+			if (jQuery('#off').is(':checked') == false) {
+				tempDataArray = [[],[],[]];
+				heatDataArray = [[],[],[]];
+				setpointDataArray = [[],[],[]];
+				timeElapsed = [0,0,0];
+			}
 		}
+		if (($('#secondRow').hasClass('row-highlight') == true) && (numTempSensors >= 2)) {
+
+			jQuery.ajax({
+				type : "POST",
+				url : "/postparams/2",
+				data : formdata,
+				success : function(data) {
+				},
+			});
+			//reset plot
+			if (jQuery('#off').is(':checked') == false) {
+				tempDataArray = [[],[],[]];
+				heatDataArray = [[],[],[]];
+				setpointDataArray = [[],[],[]];
+				timeElapsed = [0,0,0];
+			}
+		}
+		if (($('#thirdRow').hasClass('row-highlight') == true) && (numTempSensors >= 3)) {
+
+			jQuery.ajax({
+				type : "POST",
+				url : "/postparams/3",
+				data : formdata,
+				success : function(data) {
+				},
+			});
+			//reset plot
+			if (jQuery('#off').is(':checked') == false) {
+				tempDataArray = [[],[],[]];
+				heatDataArray = [[],[],[]];
+				setpointDataArray = [[],[],[]];
+				timeElapsed = [0,0,0];
+			}
+		}
+
 		return false;
 	});
 
@@ -369,8 +436,10 @@ jQuery(document).ready(function() {
 
 	// line plot Settings
 	i = 0;
-	tempdataarray = [];
-	heatdataarray = [];
+	tempDataArray = [[],[],[]];
+	heatDataArray = [[],[],[]];
+	setpointDataArray = [[],[],[]];
+	timeElapsed = [0, 0, 0];
 
 	options_temp = {
 		series : {
