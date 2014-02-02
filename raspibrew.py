@@ -105,18 +105,20 @@ def postparams(sensorNum=None):
         if len(pinList) >= 2:
             parent_connB.send(param.status)
         else:
-            param.status["mode"] = "off"
+            param.status["mode"] = "No Temp Control"
             param.status["set_point"] = 0.0
             param.status["duty_cycle"] = 0.0 
+            parent_connB.send(param.status)
             print "no heat GPIO pin assigned"
     elif sensorNum == "3":
         print "got post to temp sensor 3"
         if len(pinList) >= 3:
             parent_connC.send(param.status)
         else:
-            param.status["mode"] = "off"
+            param.status["mode"] = "No Temp Control"
             param.status["set_point"] = 0.0
             param.status["duty_cycle"] = 0.0 
+            parent_connC.send(param.status)
             print "no heat GPIO pin assigned"
     else:
         print "Sensor doesn't exist (POST)"
