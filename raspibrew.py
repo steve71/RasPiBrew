@@ -129,14 +129,17 @@ def postparams(sensorNum=None):
 @app.route('/GPIO_Toggle/<GPIO_Num>/<onoff>', methods=['GET'])
 def GPIO_Toggle(GPIO_Num=None, onoff=None):
     
-    out = {"pin" : pinGPIOList[int(GPIO_Num)-1], "status" : "off"}
-    if onoff == "on":
-        GPIO.output(pinGPIOList[int(GPIO_Num)-1], True)
-        out["status"] = "on"
-        print "GPIO Pin #%s is toggled on" % pinGPIOList[int(GPIO_Num)-1] 
-    else: #off
-        GPIO.output(pinGPIOList[int(GPIO_Num)-1], False)
-        print "GPIO Pin #%s is toggled off" % pinGPIOList[int(GPIO_Num)-1] 
+    if len(pinGPIOList) >= int(GPIO_Num):
+        out = {"pin" : pinGPIOList[int(GPIO_Num)-1], "status" : "off"}
+        if onoff == "on":
+            GPIO.output(pinGPIOList[int(GPIO_Num)-1], True)
+            out["status"] = "on"
+            print "GPIO Pin #%s is toggled on" % pinGPIOList[int(GPIO_Num)-1] 
+        else: #off
+            GPIO.output(pinGPIOList[int(GPIO_Num)-1], False)
+            print "GPIO Pin #%s is toggled off" % pinGPIOList[int(GPIO_Num)-1] 
+    else:
+        out = {"pin" : 0, "status" : "off"}
         
     return jsonify(**out)
     
