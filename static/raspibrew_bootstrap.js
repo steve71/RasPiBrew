@@ -30,6 +30,86 @@ $('.selectRow').click(function() {
 	$(this).addClass('row-highlight');
 });
 
+$("#GPIO1").change(function() {
+
+	if (this.checked) {
+		jQuery.ajax({
+			type : "GET",
+			url : "/GPIO_Toggle/1/on",
+			dataType : "json",
+			async : true,
+			cache : false,
+			timeout : 50000,
+			success : function(data) {
+				if (data.status == "on") {
+					if ($("#GPIO_Color1").hasClass('btn-danger')) {
+						$("#GPIO_Color1").removeClass('btn-danger');
+						$("#GPIO_Color1").addClass('btn-success');
+					}
+				}
+			},
+		});
+	} else {
+		jQuery.ajax({
+			type : "GET",
+			url : "/GPIO_Toggle/1/off",
+			dataType : "json",
+			async : true,
+			cache : false,
+			timeout : 50000,
+			success : function(data) {
+				if (data.status == "off") {
+					if ($("#GPIO_Color1").hasClass('btn-success')) {
+						$("#GPIO_Color1").removeClass('btn-success');
+						$("#GPIO_Color1").addClass('btn-danger');
+					}
+				}
+			},
+		});
+
+	}
+});
+
+$("#GPIO2").change(function() {
+
+	if (this.checked) {
+		jQuery.ajax({
+			type : "GET",
+			url : "/GPIO_Toggle/2/on",
+			dataType : "json",
+			async : true,
+			cache : false,
+			timeout : 50000,
+			success : function(data) {
+				if (data.status == "on") {
+					if ($("#GPIO_Color2").hasClass('btn-danger')) {
+						$("#GPIO_Color2").removeClass('btn-danger');
+						$("#GPIO_Color2").addClass('btn-success');
+					}
+				}
+			},
+		});
+	} else {
+		jQuery.ajax({
+			type : "GET",
+			url : "/GPIO_Toggle/2/off",
+			dataType : "json",
+			async : true,
+			cache : false,
+			timeout : 50000,
+			success : function(data) {
+				if (data.status == "off") {
+					if ($("#GPIO_Color2").hasClass('btn-success')) {
+						$("#GPIO_Color2").removeClass('btn-success');
+						$("#GPIO_Color2").addClass('btn-danger');
+					}
+				}
+			},
+		});
+
+	}
+});
+
 function findLS(selected_start, selected_end, in_pointArray) {
 
 	var i;
@@ -312,9 +392,9 @@ jQuery(document).ready(function() {
 	});
 	jQuery('#restart').click(function() {
 		capture_on = 1;
-		tempDataArray = [[],[],[]];
-		heatDataArray = [[],[],[]];
-		timeElapsed = [0,0,0];
+		tempDataArray = [[], [], []];
+		heatDataArray = [[], [], []];
+		timeElapsed = [0, 0, 0];
 		waitForMsg();
 	});
 	//jQuery('#calcpid').click(function() {
@@ -322,8 +402,7 @@ jQuery(document).ready(function() {
 	jQuery("#tempplot").bind("plotselected", function(event, ranges) {
 		var selected_start = ranges.xaxis.from;
 		var selected_end = ranges.xaxis.to;
-		var k_param, i_param, d_param, normalizedSlope, pointArray, m, b, deadTime;
-		[pointArray, m, b] = findLS(selected_start, selected_end, tempDataArray[0]);
+		var k_param, i_param, d_param, normalizedSlope, pointArray, m, b, deadTime; [pointArray, m, b] = findLS(selected_start, selected_end, tempDataArray[0]);
 		deadTime = pointArray[0][0];
 		normalizedSlope = m / jQuery('input:text[name=dutycycle]').val();
 		jQuery('#deadTime').html(deadTime);
@@ -368,13 +447,6 @@ jQuery(document).ready(function() {
 				success : function(data) {
 				},
 			});
-			//reset plot
-			if (jQuery('#off').is(':checked') == false) {
-				tempDataArray = [[],[],[]];
-				heatDataArray = [[],[],[]];
-				setpointDataArray = [[],[],[]];
-				timeElapsed = [0,0,0];
-			}
 		}
 		if (($('#secondRow').hasClass('row-highlight') == true) && (numTempSensors >= 2)) {
 
@@ -385,13 +457,6 @@ jQuery(document).ready(function() {
 				success : function(data) {
 				},
 			});
-			//reset plot
-			if (jQuery('#off').is(':checked') == false) {
-				tempDataArray = [[],[],[]];
-				heatDataArray = [[],[],[]];
-				setpointDataArray = [[],[],[]];
-				timeElapsed = [0,0,0];
-			}
 		}
 		if (($('#thirdRow').hasClass('row-highlight') == true) && (numTempSensors >= 3)) {
 
@@ -402,13 +467,14 @@ jQuery(document).ready(function() {
 				success : function(data) {
 				},
 			});
-			//reset plot
-			if (jQuery('#off').is(':checked') == false) {
-				tempDataArray = [[],[],[]];
-				heatDataArray = [[],[],[]];
-				setpointDataArray = [[],[],[]];
-				timeElapsed = [0,0,0];
-			}
+		}
+
+		//reset plot
+		if (jQuery('#off').is(':checked') == false) {
+			tempDataArray = [[], [], []];
+			heatDataArray = [[], [], []];
+			setpointDataArray = [[], [], []];
+			timeElapsed = [0, 0, 0];
 		}
 
 		return false;
@@ -436,9 +502,9 @@ jQuery(document).ready(function() {
 
 	// line plot Settings
 	i = 0;
-	tempDataArray = [[],[],[]];
-	heatDataArray = [[],[],[]];
-	setpointDataArray = [[],[],[]];
+	tempDataArray = [[], [], []];
+	heatDataArray = [[], [], []];
+	setpointDataArray = [[], [], []];
 	timeElapsed = [0, 0, 0];
 
 	options_temp = {

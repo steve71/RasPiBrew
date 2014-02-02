@@ -32,7 +32,7 @@ import xml.etree.ElementTree as ET
 from flask import Flask, render_template, request, jsonify
 
 global parent_conn, parent_connB, parent_connC, statusQ, statusQ_B, statusQ_C
-global xml_root, template_name, pinList 
+global xml_root, template_name, pinHeatList, pinGPIOList
 
 app = Flask(__name__, template_folder='templates')
 #url_for('static', filename='raspibrew.css')
@@ -102,7 +102,7 @@ def postparams(sensorNum=None):
         parent_conn.send(param.status)
     elif sensorNum == "2":
         print "got post to temp sensor 2"
-        if len(pinList) >= 2:
+        if len(pinHeatList) >= 2:
             parent_connB.send(param.status)
         else:
             param.status["mode"] = "No Temp Control"
@@ -112,7 +112,7 @@ def postparams(sensorNum=None):
             print "no heat GPIO pin assigned"
     elif sensorNum == "3":
         print "got post to temp sensor 3"
-        if len(pinList) >= 3:
+        if len(pinHeatList) >= 3:
             parent_connC.send(param.status)
         else:
             param.status["mode"] = "No Temp Control"
@@ -124,6 +124,21 @@ def postparams(sensorNum=None):
         print "Sensor doesn't exist (POST)"
         
     return 'OK'
+
+#post GPIO     
+@app.route('/GPIO_Toggle/<GPIO_Num>/<onoff>', methods=['GET'])
+def GPIO_Toggle(GPIO_Num=None, onoff=None):
+    
+    out = {"pin" : pinGPIOList[int(GPIO_Num)-1], "status" : "off"}
+    if onoff == "on":
+        GPIO.output(pinGPIOList[int(GPIO_Num)-1], True)
+        out["status"] = "on"
+        print "GPIO Pin #%s is toggled on" % pinGPIOList[int(GPIO_Num)-1] 
+    else: #off
+        GPIO.output(pinGPIOList[int(GPIO_Num)-1], False)
+        print "GPIO Pin #%s is toggled off" % pinGPIOList[int(GPIO_Num)-1] 
+        
+    return jsonify(**out)
     
 #get status from RasPiBrew using firefox web browser (first temp sensor / backwards compatibility)
 @app.route('/getstatus') #only GET
@@ -477,15 +492,23 @@ if __name__ == '__main__':
     else:
         LCD = False 
     
-    pinList=[]
+    pinHeatList=[]
     for pin in xml_root.iter('Heat_Pin'):
-        pinList.append(int(pin.text.strip()))
+        pinHeatList.append(int(pin.text.strip()))
+        
+    pinGPIOList=[]
+    for pin in xml_root.iter('GPIO_Pin'):
+        pinGPIOList.append(int(pin.text.strip()))
+        
+    for pinNum in pinGPIOList:
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(pinNum, GPIO.OUT)
     
     myTempSensorNum = 0
     for tempSensorId in xml_root.iter('Temp_Sensor_Id'):
           
-        if len(pinList) >= myTempSensorNum + 1:
-            pinNum = pinList[myTempSensorNum]
+        if len(pinHeatList) >= myTempSensorNum + 1:
+            pinNum = pinHeatList[myTempSensorNum]
             readOnly = False
         else:
             pinNum = 0
