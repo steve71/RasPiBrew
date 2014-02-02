@@ -32,7 +32,7 @@ import xml.etree.ElementTree as ET
 from flask import Flask, render_template, request, jsonify
 
 global parent_conn, parent_connB, parent_connC, statusQ, statusQ_B, statusQ_C
-global xml_root, template_name 
+global xml_root, template_name, pinList 
 
 app = Flask(__name__, template_folder='templates')
 #url_for('static', filename='raspibrew.css')
@@ -102,10 +102,22 @@ def postparams(sensorNum=None):
         parent_conn.send(param.status)
     elif sensorNum == "2":
         print "got post to temp sensor 2"
-        parent_connB.send(param.status)
+        if len(pinList) >= 2:
+            parent_connB.send(param.status)
+        else:
+            param.status["mode"] = "off"
+            param.status["set_point"] = 0.0
+            param.status["duty_cycle"] = 0.0 
+            print "no heat GPIO pin assigned"
     elif sensorNum == "3":
         print "got post to temp sensor 3"
-        parent_connC.send(param.status)
+        if len(pinList) >= 3:
+            parent_connC.send(param.status)
+        else:
+            param.status["mode"] = "off"
+            param.status["set_point"] = 0.0
+            param.status["duty_cycle"] = 0.0 
+            print "no heat GPIO pin assigned"
     else:
         print "Sensor doesn't exist (POST)"
         
@@ -443,13 +455,7 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
                 readyPOST = False
             time.sleep(.01)
           
-def configTempControlProc(myTempSensorNum, LCD, pinNum, readOnly, statusQ, child_conn):
-    
-    p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensorNum, LCD, pinNum, readOnly, 
-                                                              param.status, statusQ, child_conn))
-    return p
-    
-                                
+                                          
 if __name__ == '__main__':
     
     os.chdir("/var/www")
@@ -489,19 +495,22 @@ if __name__ == '__main__':
         if myTempSensorNum == 0:
             statusQ = Queue(2) #blocking queue        
             parent_conn, child_conn = Pipe()     
-            p = configTempControlProc(myTempSensorNum, LCD, pinNum, readOnly, statusQ, child_conn)
+            p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensorNum, LCD, pinNum, readOnly, \
+                                                              param.status, statusQ, child_conn))
             p.start()
             
         if myTempSensorNum == 1:
             statusQ_B = Queue(2) #blocking queue    
             parent_connB, child_conn = Pipe()  
-            p = configTempControlProc(myTempSensorNum, LCD, pinNum, readOnly, statusQ_B, child_conn)
+            p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensorNum, LCD, pinNum, readOnly, \
+                                                              param.status, statusQ_B, child_conn))
             p.start()
             
         if myTempSensorNum == 2:
             statusQ_C = Queue(2) #blocking queue 
             parent_connC, child_conn = Pipe()     
-            p = configTempControlProc(myTempSensorNum, LCD, pinNum, readOnly, statusQ_C, child_conn)
+            p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensorNum, LCD, pinNum, readOnly, \
+                                                              param.status, statusQ_C, child_conn))
             p.start()
             
         myTempSensorNum += 1
