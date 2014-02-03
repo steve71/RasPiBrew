@@ -41,7 +41,8 @@ $("#GPIO1").change(function() {
 			cache : false,
 			timeout : 50000,
 			success : function(data) {
-				if (data.status == "on") {
+				$("#GPIO_label1").attr('title', 'Switch controls pin '+data.pin);
+				if (data.status == "on") {	
 					if ($("#GPIO_Color1").hasClass('btn-danger')) {
 						$("#GPIO_Color1").removeClass('btn-danger');
 						$("#GPIO_Color1").addClass('btn-success');
@@ -58,6 +59,7 @@ $("#GPIO1").change(function() {
 			cache : false,
 			timeout : 50000,
 			success : function(data) {
+				$("#GPIO_label1").attr('title', 'Switch controls pin '+data.pin);
 				if (data.status == "off") {
 					if ($("#GPIO_Color1").hasClass('btn-success')) {
 						$("#GPIO_Color1").removeClass('btn-success');
@@ -81,6 +83,7 @@ $("#GPIO2").change(function() {
 			cache : false,
 			timeout : 50000,
 			success : function(data) {
+				$("#GPIO_label2").attr('title', 'Switch controls pin '+data.pin);
 				if (data.status == "on") {
 					if ($("#GPIO_Color2").hasClass('btn-danger')) {
 						$("#GPIO_Color2").removeClass('btn-danger');
@@ -98,6 +101,7 @@ $("#GPIO2").change(function() {
 			cache : false,
 			timeout : 50000,
 			success : function(data) {
+				$("#GPIO_label2").attr('title', 'Switch controls pin '+data.pin);
 				if (data.status == "off") {
 					if ($("#GPIO_Color2").hasClass('btn-success')) {
 						$("#GPIO_Color2").removeClass('btn-success');
