@@ -10,7 +10,7 @@ Hardware and Software Setup Information:
 [http://raspibrew.com/setup/](http://raspibrew.com/setup/)  
 
 ## Web Interface in Firefox Browser
-
+<img src="https://github.com/steve71/RasPiBrew/raw/master/img/raspibrew_bootstrap.png" alt=""/>
 <img src="https://github.com/steve71/RasPiBrew/raw/master/img/PID_Tuning.png" alt="" width="954 height="476.5" /> 
 
 ----------
