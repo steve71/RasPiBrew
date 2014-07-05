@@ -406,7 +406,9 @@ jQuery(document).ready(function() {
 	jQuery("#tempplot").bind("plotselected", function(event, ranges) {
 		var selected_start = ranges.xaxis.from;
 		var selected_end = ranges.xaxis.to;
-		var k_param, i_param, d_param, normalizedSlope, pointArray, m, b, deadTime; [pointArray, m, b] = findLS(selected_start, selected_end, tempDataArray[0]);
+		var k_param, i_param, d_param, normalizedSlope, pointArray, m, b, deadTime; 
+		var LS = findLS(selected_start, selected_end, tempDataArray[0]);
+		pointArray = LS[0]; m = LS[1]; b = LS[2];
 		deadTime = pointArray[0][0];
 		normalizedSlope = m / jQuery('input:text[name=dutycycle]').val();
 		jQuery('#deadTime').html(deadTime);
