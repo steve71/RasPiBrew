@@ -2,15 +2,18 @@
 
 ## Control a Water Heater Wirelessly over a Web Interface
 
-This program will control an electric heating element in a vessel to set temperatures and regulate boil.  All status included temperature is sent back wirelessly approx. every second.  The duty cycle and temperature is plotted in real time.  A Type C PID algorithm has been successfully implemented to automatically control the heating element when the desired temperature is set.   
+This program will control an electric heating element in a vessel to set temperatures and regulate boil.  All status included temperature is sent back wirelessly approx. every second.  The duty cycle and temperature is plotted in real time.  A Type C PID algorithm has been successfully implemented to automatically control the heating element when the desired temperature is set.  
+
+For bootstrap multi-vessel and GPIO switch control version set template element to raspibrew_bootstrap.html in config.xml.  For original version set template to raspibrew.html.  The config.xml file explains how to setup for one, two or three vessels.  The number of vessels and GPIO switches can easily be expanded in the software.  The same raspibrew.py code supports both versions.    
 
 RasPiBrew Webpage:  
 [http://raspibrew.com](http://raspibrew.com)  
 Hardware and Software Setup Information:  
 [http://raspibrew.com/setup/](http://raspibrew.com/setup/)  
 
-## Web Interface in Firefox Browser
+## Bootstrap Web Interface in Firefox Browser
 <img src="https://github.com/steve71/RasPiBrew/raw/master/img/raspibrew_bootstrap.png" alt=""/>
+## Original Web Interface in Firefox Browser
 <img src="https://github.com/steve71/RasPiBrew/raw/master/img/PID_Tuning.png" alt="" width="954 height="476.5" /> 
 
 ----------
