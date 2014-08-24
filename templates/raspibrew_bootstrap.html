@@ -146,7 +146,7 @@
 								<div class="form-group">
 									<label for="setpoint" class="col-xs-4 control-label">Set Point:</label>
 									<div class="input-group col-xs-4">
-										<input type="number" name="setpoint" class="form-control" id="setpoint" value={{set_point}}>
+										<input type="number" step="any" name="setpoint" class="form-control" id="setpoint" value={{set_point}}>
 										<span id="setpointInputUnits" class="input-group-addon"></span>
 									</div>
 									<div class="col-xs-4"></div>
@@ -154,7 +154,7 @@
 								<div class="form-group">
 									<label for="dutycycle" class="col-xs-4 control-label">Duty Cycle:</label>
 									<div class="input-group col-xs-4">
-										<input name="dutycycle" id="dutycycle" type="number" class="form-control" value={{duty_cycle}}>
+										<input name="dutycycle" id="dutycycle" type="number" step="any" class="form-control" value={{duty_cycle}}>
 										<span class="input-group-addon">%</span>
 									</div>
 									<div class="col-xs-4"></div>
@@ -162,7 +162,7 @@
 								<div class="form-group">
 									<label for="cycletime" class="col-xs-4 control-label">Cycle Time:</label>
 									<div class="input-group col-xs-4">
-										<input name="cycletime" type="number" class="form-control" id="cycletime" value={{cycle_time}}>
+										<input name="cycletime" type="number" step="any" class="form-control" id="cycletime" value={{cycle_time}}>
 										<span class="input-group-addon">sec</span>
 									</div>
 									<div class="col-xs-4"></div>
@@ -174,19 +174,19 @@
 									<div class="form-group col-xs-3">
 										<label for="kc_param" class="control-label">Kc:</label>
 										<div class="input-group">
-											<input name="k" type="number" class="form-control" id="kc_param" value={{k_param}}>
+											<input name="k" type="number" step="any" class="form-control" id="kc_param" value={{k_param}}>
 										</div>
 									</div>
 									<div class="form-group col-xs-3">
 										<label for="ti_param" class="control-label">Ti:</label>
 										<div class="input-group">
-											<input name="i" type="number" class="form-control" id="ti_param" value={{i_param}}>
+											<input name="i" type="number" step="any" class="form-control" id="ti_param" value={{i_param}}>
 										</div>
 									</div>
 									<div class="form-group col-xs-3">
 										<label for="td_param" class="control-label">Td:</label>
 										<div class="input-group">
-											<input name="d" type="number" class="form-control " id="td_param" value={{d_param}}>
+											<input name="d" type="number" step="any" class="form-control " id="td_param" value={{d_param}}>
 										</div>
 									</div>
 									<div class="col-xs-2"></div>
