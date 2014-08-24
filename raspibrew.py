@@ -235,7 +235,6 @@ def heatProcGPIO(cycle_time, duty_cycle, pinNum, conn):
     p = current_process()
     print 'Starting:', p.name, p.pid
     if pinNum > 0:
-        GPIO.setmode(GPIO.BCM)
         GPIO.setup(pinNum, GPIO.OUT)
         while (True):
             while (conn.poll()): #get last
@@ -495,6 +494,12 @@ if __name__ == '__main__':
     else:
         LCD = False 
     
+    gpioNumberingScheme = xml_root.find('GPIO_pin_numbering_scheme').text.strip()
+    if gpioNumberingScheme == "BOARD":
+        GPIO.setmode(GPIO.BOARD)
+    else:
+        GPIO.setmode(GPIO.BCM)
+
     pinHeatList=[]
     for pin in xml_root.iter('Heat_Pin'):
         pinHeatList.append(int(pin.text.strip()))
@@ -504,7 +509,6 @@ if __name__ == '__main__':
         pinGPIOList.append(int(pin.text.strip()))
         
     for pinNum in pinGPIOList:
-        GPIO.setmode(GPIO.BCM)
         GPIO.setup(pinNum, GPIO.OUT)
     
     myTempSensorNum = 0
