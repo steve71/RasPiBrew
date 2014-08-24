@@ -5,6 +5,8 @@
 	<Template>raspibrew_bootstrap.html</Template>
 	<!-- Use LCD - yes or no-->
 	<Use_LCD>yes</Use_LCD>
+	<!-- GPIO pin numbering scheme - choose BOARD or BCM. If something else than these are given, BCM is chosen as default. -->
+	<GPIO_pin_numbering_scheme>BCM</GPIO_pin_numbering_scheme>
 	<!-- Temperature Sensor Id -->
 	<!-- For Temp Control the Temp_Sensor_Id must have a corresponding GPIO Pin used -->
 	<!-- for heat, otherwise the temperature sensor is only for temp readout -->
