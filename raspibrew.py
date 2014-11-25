@@ -496,7 +496,7 @@ if __name__ == '__main__':
 
     brewtime = time.time()
     
-    os.chdir("/brewery/www")
+    os.chdir("/var/www")
      
     call(["modprobe", "w1-gpio"])
     call(["modprobe", "w1-therm"])
