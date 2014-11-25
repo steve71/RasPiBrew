@@ -33,6 +33,7 @@ from flask import Flask, render_template, request, jsonify
 
 global parent_conn, parent_connB, parent_connC, statusQ, statusQ_B, statusQ_C
 global xml_root, template_name, pinHeatList, pinGPIOList
+global brewtime
 
 app = Flask(__name__, template_folder='templates')
 #url_for('static', filename='raspibrew.css')
@@ -178,6 +179,9 @@ def tempData1Wire(tempSensorId):
         
     return temp_C
 
+def getbrewtime():
+    return (time.time() - brewtime)	
+
 # Stand Alone Get Temperature Process               
 def gettempProc(conn, myTempSensorNum):
     p = current_process()
@@ -318,40 +322,44 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
         ptemp = Process(name = "gettempProc", target=gettempProc, args=(child_conn_temp, myTempSensorNum))
         ptemp.daemon = True
         ptemp.start()   
-        
+
         #Pipe to communicate with "Heat Process"
         parent_conn_heat, child_conn_heat = Pipe()    
         #Start Heat Process      
         pheat = Process(name = "heatProcGPIO", target=heatProcGPIO, args=(cycle_time, duty_cycle, pinNum, child_conn_heat))
         pheat.daemon = True
         pheat.start() 
-        
+
         temp_ma_list = []
         manage_boil_trigger = False
-        
+
         tempUnits = xml_root.find('Temp_Units').text.strip()
         numTempSensors = 0
         for tempSensorId in xml_root.iter('Temp_Sensor_Id'):
             numTempSensors += 1
-        
+
         temp_ma = 0.0
-        
+
+	#overwrite log file for new data log
+    	ff = open("brewery" + str(myTempSensorNum) + ".csv", "wb")
+        ff.close()
+
         while (True):
             readytemp = False
             while parent_conn_temp.poll(): #Poll Get Temperature Process Pipe
                 temp_C, tempSensorNum, elapsed = parent_conn_temp.recv() #non blocking receive from Get Temperature Process
-                
+
                 if temp_C == -99:
                     print "Bad Temp Reading - retry"
                     continue
-                
+
                 if (tempUnits == 'F'):
                     temp = (9.0/5.0)*temp_C + 32
                 else:
                     temp = temp_C
-                
+
                 temp_str = "%3.2f" % temp
-                
+
                 if LCD:
                     #write to LCD
                     ser.write("?y1?x05")
@@ -359,20 +367,20 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
                     ser.write("?7") #degree
                     time.sleep(.005) #wait 5msec
                     if (tempUnits == 'F'):
-                        ser.write("F   ") 
+                        ser.write("F   ")
                     else:
                         ser.write("C   ")
                 readytemp = True
-                
-            if readytemp == True:        
+
+            if readytemp == True:
                 if mode == "auto":
-                    temp_ma_list.append(temp) 
-                    
+                    temp_ma_list.append(temp)
+
                     #smooth data
                     temp_ma = 0.0 #moving avg init
                     while (len(temp_ma_list) > num_pnts_smooth):
-                        temp_ma_list.pop(0) #remove oldest elements in list 
-                
+                        temp_ma_list.pop(0) #remove oldest elements in list
+
                     if (len(temp_ma_list) < num_pnts_smooth):
                         for temp_pnt in temp_ma_list:
                             temp_ma += temp_pnt
@@ -380,56 +388,59 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
                     else: #len(temp_ma_list) == num_pnts_smooth
                         for temp_idx in range(num_pnts_smooth):
                             temp_ma += temp_ma_list[temp_idx]
-                        temp_ma /= num_pnts_smooth                                      
-                
+                        temp_ma /= num_pnts_smooth
+
                     #print "len(temp_ma_list) = %d" % len(temp_ma_list)
                     #print "Num Points smooth = %d" % num_pnts_smooth
                     #print "temp_ma = %.2f" % temp_ma
-                    #print temp_ma_list      
-                    
+                    #print temp_ma_list
+
                     #calculate PID every cycle - always get latest temperature
                     duty_cycle = pid.calcPID_reg4(temp_ma, set_point, True)
                     #send to heat process every cycle
-                    parent_conn_heat.send([cycle_time, duty_cycle])             
+                    parent_conn_heat.send([cycle_time, duty_cycle])
                 if mode == "boil":
                     if (temp > boil_manage_temp) and (manage_boil_trigger == True): #do once
                         manage_boil_trigger = False
-                        duty_cycle = boil_duty_cycle 
-                        parent_conn_heat.send([cycle_time, duty_cycle]) 
-                
-                #put current status in queue    
+                        duty_cycle = boil_duty_cycle
+                        parent_conn_heat.send([cycle_time, duty_cycle])
+
+                #put current status in queue
                 try:
                     paramStatus = packParamGet(numTempSensors, temp_str, tempUnits, elapsed, mode, cycle_time, duty_cycle, \
                             boil_duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, k_param, i_param, d_param)
                     statusQ.put(paramStatus) #GET request
                 except Full:
                     pass
-                         
+
                 while (statusQ.qsize() >= 2):
-                    statusQ.get() #remove old status 
-                   
+                    statusQ.get() #remove old status
+
                 print "Current Temp: %3.2f deg %s, Heat Output: %3.1f%%" \
-                                                        % (temp, tempUnits, duty_cycle)                  
-                readytemp == False  
-                
+                                                        % (temp, tempUnits, duty_cycle)
+
+		logdata(myTempSensorNum, temp, duty_cycle)
+
+                readytemp == False
+
                 #if only reading temperature (no temp control)
                 if readOnly:
-                    continue 
-                
+                    continue
+
             while parent_conn_heat.poll(): #Poll Heat Process Pipe
                 cycle_time, duty_cycle = parent_conn_heat.recv() #non blocking receive from Heat Process
                 if LCD:
                     #write to LCD
                     ser.write("?y2?x00Duty: ")
                     ser.write("%3.1f" % duty_cycle)
-                    ser.write("%     ")    
-                                 
+                    ser.write("%     ")
+
             readyPOST = False
             while conn.poll(): #POST settings - Received POST from web browser or Android device
                 paramStatus = conn.recv()
                 mode, cycle_time, duty_cycle_temp, boil_duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, \
                 k_param, i_param, d_param = unPackParamInitAndPost(paramStatus)
-                
+
                 readyPOST = True
             if readyPOST == True:
                 if mode == "auto":
@@ -440,11 +451,11 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
                         ser.write("%3.1f" % set_point)
                         ser.write("?7") #degree
                         time.sleep(.005) #wait 5msec
-                        ser.write("F   ") 
+                        ser.write("F   ")
                     print "auto selected"
                     pid = PIDController.pidpy(cycle_time, k_param, i_param, d_param) #init pid
                     duty_cycle = pid.calcPID_reg4(temp_ma, set_point, True)
-                    parent_conn_heat.send([cycle_time, duty_cycle])  
+                    parent_conn_heat.send([cycle_time, duty_cycle])
                 if mode == "boil":
                     if LCD:
                         ser.write("?y0?x00Boil Mode     ")
@@ -454,15 +465,15 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
                     boil_duty_cycle = duty_cycle_temp
                     duty_cycle = 100 #full power to boil manage temperature
                     manage_boil_trigger = True
-                    parent_conn_heat.send([cycle_time, duty_cycle])  
+                    parent_conn_heat.send([cycle_time, duty_cycle])
                 if mode == "manual":
-                    if LCD: 
+                    if LCD:
                         ser.write("?y0?x00Manual Mode     ")
                         ser.write("?y1?x00BK: ")
                         ser.write("?y3?x00Heat: on       ")
                     print "manual selected"
                     duty_cycle = duty_cycle_temp
-                    parent_conn_heat.send([cycle_time, duty_cycle])    
+                    parent_conn_heat.send([cycle_time, duty_cycle])
                 if mode == "off":
                     if LCD:
                         ser.write("?y0?x00PID off      ")
@@ -473,11 +484,19 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
                     parent_conn_heat.send([cycle_time, duty_cycle])
                 readyPOST = False
             time.sleep(.01)
-          
-                                          
+        
+
+def logdata(tank, temp, heat):
+    f = open("brewery" + str(tank) + ".csv", "ab")
+    f.write("%3.1f;%3.3f;%3.3f\n" % (getbrewtime(), temp, heat))
+    f.close()
+
+
 if __name__ == '__main__':
+
+    brewtime = time.time()
     
-    os.chdir("/var/www")
+    os.chdir("/brewery/www")
      
     call(["modprobe", "w1-gpio"])
     call(["modprobe", "w1-therm"])
@@ -549,4 +568,3 @@ if __name__ == '__main__':
       
     app.debug = True 
     app.run(use_reloader=False, host='0.0.0.0')
-    
