@@ -419,7 +419,7 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
                 print "Current Temp: %3.2f deg %s, Heat Output: %3.1f%%" \
                                                         % (temp, tempUnits, duty_cycle)
 
-		logdata(myTempSensorNum, temp, duty_cycle)
+                logdata(myTempSensorNum, temp, duty_cycle)
 
                 readytemp == False
 
