@@ -17,20 +17,6 @@ while true; do
     esac
 done
 
-while true; do
-    read -p "Do you wish copy RasPiBrew software to /var/www?" yn
-    case $yn in
-        [Yy]* ) mkdir /var/www; 
-		cp -r pid /var/www/pid;
-		cp -r static /var/www/static
-		cp -r templates /var/www/templates
-		cp * /var/www
-		break;;
-        [Nn]* ) break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
-
 #Install pip (package installer):
 apt-get -y install python-setuptools
 easy_install pip
@@ -46,5 +32,18 @@ apt-get -y install python-dev
 apt-get -y install libpcre3-dev
 pip install Flask
 
+while true; do
+    read -p "Do you wish copy RasPiBrew software to /var/www?" yn
+    case $yn in
+        [Yy]* ) mkdir /var/www; 
+		cp -r pid /var/www/pid;
+		cp -r static /var/www/static
+		cp -r templates /var/www/templates
+		cp * /var/www
+		break;;
+        [Nn]* ) break;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
 
 
