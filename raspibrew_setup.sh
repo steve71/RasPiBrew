@@ -46,4 +46,25 @@ while true; do
     esac
 done
 
+while true; do
+    read -p "Do you wish to automatically boot RasPiBrew?" yn
+    case $yn in
+        [Yy]* ) cp ./brewonboot /etc/init.d;
+		chmod 755 /etc/init.d/brewonboot;
+		update-rc.d brewonboot defaults;
+		break;;
+        [Nn]* ) break;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
+while true; do
+    read -p "Reboot to complete installation?" yn
+    case $yn in
+        [Yy]* ) reboot; break;;
+        [Nn]* ) break;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
 
