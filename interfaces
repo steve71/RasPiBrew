@@ -1,0 +1,27 @@
+#
+# Raspberry Pi Static IP wifi networking setup
+#
+# 1) Place this file in directory: /etc/network
+# 2) Replace ssid with name of router and if using password, replace wireless_key_passphrase 
+# 	 with wireless password
+# 3) Replace address and gateway ip with your static address and gateway ip
+#
+auto lo
+
+iface lo inet loopback
+iface eth0 inet static
+
+auto wlan0
+
+allow-hotplug wlan0
+iface wlan0 inet static
+address 192.168.1.103
+netmask 255.255.255.0
+gateway 192.168.1.1
+
+# if no wireless password:
+wireless-essid ssid
+
+# otherwise, use the following where ssid is the name of the router: 
+wpa-ssid "ssid"
+wpa-psk "wireless_key_passphrase" 
