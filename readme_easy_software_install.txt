@@ -15,4 +15,4 @@ Simple Complete Raspberry Pi & RasPiBrew Software Installation from Windows
 10) Go into RasPiBrew directory
 11) Type: 'chmod +x raspibrew_setup.sh' to make it executable
 12) Type: 'sudo ./raspibrew_setup.sh' and follow prompts
-13) Edit the documented config.xml file
+13) Edit the documented config.xml file. The temp sensor id is located in the following directory: /sys/bus/w1/devices/w1_bus_master1/
