@@ -275,10 +275,11 @@ def unPackParamInitAndPost(paramStatus):
     return mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, \
            k_param, i_param, d_param
            
-def packParamGet(numTempSensors, temp, tempUnits, elapsed, mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, \
+def packParamGet(numTempSensors, myTempSensorNum, temp, tempUnits, elapsed, mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, \
                                  boil_manage_temp, num_pnts_smooth, k_param, i_param, d_param):
     
     param.status["numTempSensors"] = numTempSensors
+    param.status["myTempSensorNum"] = myTempSensorNum
     param.status["temp"] = temp
     param.status["tempUnits"] = tempUnits
     param.status["elapsed"] = elapsed
@@ -407,7 +408,7 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
 
                 #put current status in queue
                 try:
-                    paramStatus = packParamGet(numTempSensors, temp_str, tempUnits, elapsed, mode, cycle_time, duty_cycle, \
+                    paramStatus = packParamGet(numTempSensors, myTempSensorNum, temp_str, tempUnits, elapsed, mode, cycle_time, duty_cycle, \
                             boil_duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, k_param, i_param, d_param)
                     statusQ.put(paramStatus) #GET request
                 except Full:
