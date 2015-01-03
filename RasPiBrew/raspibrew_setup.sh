@@ -33,20 +33,6 @@ apt-get -y install libpcre3-dev
 pip install Flask
 
 while true; do
-    read -p "Do you wish copy RasPiBrew software to /var/www?" yn
-    case $yn in
-        [Yy]* ) mkdir /var/www; 
-		cp -r pid /var/www/pid;
-		cp -r static /var/www/static
-		cp -r templates /var/www/templates
-		cp * /var/www
-		break;;
-        [Nn]* ) break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
-
-while true; do
     read -p "Do you wish to automatically boot RasPiBrew?" yn
     case $yn in
         [Yy]* ) cp ./brewonboot /etc/init.d;
