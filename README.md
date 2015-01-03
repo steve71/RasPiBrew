@@ -12,15 +12,15 @@ Hardware and Software Setup Information:
 [http://raspibrew.com/setup/](http://raspibrew.com/setup/)  
 
 ## Bootstrap Web Interface in Firefox Browser
-<img src="https://github.com/steve71/RasPiBrew/raw/images/img/raspibrew_bootstrap.png" alt=""/>
+<img src="https://github.com/steve71/RasPiBrew/raw/images/raspibrew_bootstrap.png" alt=""/>
 ## Original Web Interface in Firefox Browser
-<img src="https://github.com/steve71/RasPiBrew/raw/images/img/PID_Tuning.png" alt="" width="954 height="476.5" /> 
+<img src="https://github.com/steve71/RasPiBrew/raw/images/PID_Tuning.png" alt="" width="954 height="476.5" /> 
 
 ----------
 
 ## Setting to 120 deg F
 
-![](https://github.com/steve71/RasPiBrew/raw/images/img/PID_Temp_Control.png)  
+![](https://github.com/steve71/RasPiBrew/raw/images/PID_Temp_Control.png)  
 The temp plot shows temperature in degrees F over time in seconds.  
 The heat plot shows duty cycle percentage over time in seconds.
 
