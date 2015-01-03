@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2012-2014 Stephen P. Smith
+# Copyright (c) 2012-2015 Stephen P. Smith
 #
 # Permission is hereby granted, free of charge, to any person obtaining 
 # a copy of this software and associated documentation files 
@@ -497,7 +497,7 @@ if __name__ == '__main__':
 
     brewtime = time.time()
     
-    os.chdir("/var/www")
+    os.chdir("/var/www/RasPiBrew")
      
     call(["modprobe", "w1-gpio"])
     call(["modprobe", "w1-therm"])
