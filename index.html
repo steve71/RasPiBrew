@@ -64,41 +64,30 @@ Optional: A Jeelabs Output Plug can also be used to drive more relays but requir
 
 <p>The Jeelabs circuit board is connected to a temperature sensor and a solid state relay to control a heating element.   The setup is shown in the following schematic:</p>
 
-<hr>
-
-<p>| 1-Wire  |    | Relay |
+<pre><code> ---------      ------- 
+| 1-Wire  |    | Relay |
 | Sensor  |    |       | 
-| + - GND |    |  + -  |</p>
-
-<hr>
-
-<p>| |  |          | |           (Optional SSR Connections)</p>
-
-<hr>
-
-<p>| Jeelabs Thermo Plug |        |  Relay 2 |  | Relay 3 | ...
- | PWR +3V GND AIO DIO |        |  +  -    |  |  +  -   |</p>
-
-<hr>
-
-<pre><code>|   |   |   |   |             5V  |         5V  | 
-</code></pre>
-
-<p>------------------------            |             |
+| + - GND |    |  + -  |
+ ---------      -------
+  | |  |          | |           (Optional SSR Connections)
+  ---------------------          -----------   ---------
+ | Jeelabs Thermo Plug |        |  Relay 2 |  | Relay 3 | ...
+ | PWR +3V GND AIO DIO |        |  +  -    |  |  +  -   |
+  ---------------------          ----------    ---------     
+    |   |   |   |   |             5V  |         5V  | 
+  ------------------------            |             |
  | 5V  5V  GND  P4 P17    |     ---------------------------
  |                     5V |---| VCC   P0            P1 ... |
  |  Raspberry Pi/      GND|---| GND   Optional             |
  |  Adafruit Plate kit SDA|---| DIO   Jeelabs Output Plug  | 
  |                     SCL|---| AI0                        |
- |      5V GND TX         |    ----------------------------</p>
-
-<hr>
-
-<pre><code>     |  |   |
-  --------------   
- | 20x4 LCD and |
- | LCD117 kit   |
-  --------------
+ |      5V GND TX         |    ----------------------------
+  ------------------------
+         |  |   |
+      --------------   
+     | 20x4 LCD and |
+     | LCD117 kit   |
+      --------------
 </code></pre>
 
 <p>Only the printed circuit board of the Jeelabs Thermo Plug is needed and solder:</p>
