@@ -58,8 +58,8 @@
 <li>Jeelabs Thermo Plug components from Radio Shack: 4.7k resistor, 1k resistor, 1N4001 diode, 2N4401 transistor</li>
 <li>headers and wire jumpers</li>
 <li>1-wire DS18B20 digital thermometer</li>
-<li><p>USB wifi adapter (Edimax EW-7811UN) and router</p></li>
-<li><p>Optional:  20×4 LCD and LCD117 kit.  It is supported in the software</p></li>
+<li>USB wifi adapter (Edimax EW-7811UN) and router</li>
+<li>Optional:  20×4 LCD and LCD117 kit.  It is supported in the software</li>
 <li>Optional: A Jeelabs Output Plug can also be used to drive more relays but requires software modification.</li>
 </ul>
 
@@ -110,12 +110,11 @@
 
 <p>Load Operating System onto SDCard</p>
 
-<p>Download the raspberry pi operating system: <a href="http://www.raspberrypi.org/downloads">Raspberry Pi Downloads</a> Use <a href="http://www.softpedia.com/get/CD-DVD-Tools/Data-CD-DVD-Burning/Win32-Disk-Imager.shtml">Win32DiskImager</a> to install onto SDCARD. 
-In terminal type:</p>
+<p>Download the raspberry pi operating system: <a href="http://www.raspberrypi.org/downloads">Raspberry Pi Downloads</a> Use <a href="http://www.softpedia.com/get/CD-DVD-Tools/Data-CD-DVD-Burning/Win32-Disk-Imager.shtml">Win32DiskImager</a> to install onto SDCARD. </p>
 
-<pre><code>sudo apt-get update     
-sudo apt-get upgrade
-</code></pre>
+<p>In terminal type:
+    sudo apt-get update<br>
+    sudo apt-get upgrade</p>
 
 <h3>
 <a id="beginners-guide" class="anchor" href="#beginners-guide" aria-hidden="true"><span class="octicon octicon-link"></span></a>Beginner’s Guide</h3>
@@ -154,7 +153,7 @@ gateway 192.168.1.1
 wpa-psk "wireless_key_passphrase" 
 </code></pre>
 
-<p>with the correct ssid (router name) and wireless key passphrase.</p>
+<p>with the correct <code>ssid</code> (router name) and <code>wireless_key_passphrase</code>.</p>
 
 <p><a href="http://www.penguintutor.com/blog/viewblog.php?blog=6306">Tutorial on setting up a static IP address</a>
 <a href="https://help.ubuntu.com/community/WifiDocs/WiFiHowTo">Tutorial on setting up wifi device on linux</a></p>
@@ -190,7 +189,7 @@ mkdir www
 
 <p>Copy software to <code>/var/www</code> preserving the directory structure.</p>
 
-<p>Update: Replace the temp sensor id in config.xml with the id of your DS18B20 temperature sensor found in the <code>/sys/bus/w1/devices/w1_bus_master1/</code> directory on the Raspberry Pi. (Previously the temp sensor id was in raspibrew.py)</p>
+<p>Update: Replace the temp sensor id in config.xml with the id of your DS18B20 temperature sensor found in the <code>/sys/bus/w1/devices/w1_bus_master1/</code> directory on the Raspberry Pi. (Previously the temp sensor id was in <code>raspibrew.py</code>)</p>
 
 <p>Start Putty on Windows and type login name and password.
 Program must be run as superuser: Type <code>sudo bash</code>
