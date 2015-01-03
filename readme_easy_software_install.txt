@@ -1,7 +1,7 @@
 Simple Complete Raspberry Pi & RasPiBrew Software Installation from Windows
 ---------------------------------------------------------------------------
 
-1) Google SDFormatter, Win32DiskImager, Putty and WinSCP and download them
+1) Google SDFormatter, Win32DiskImager and Putty and download them
 2) Use SDFormatter to format SD card
 3) Use Win32DiskImager to burn latest Raspbian Image from http://www.raspberrypi.org/downloads/
 4) When Raspberry pi boots up:
