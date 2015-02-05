@@ -17,8 +17,9 @@
 	<Temp_Sensor_Id>28-0000037ec2b1</Temp_Sensor_Id>
 	<!-- Up to 2 GPIO pins are supported but can easily be expanded in code-->
 	<!-- Repeat <GPIO_Pin> element name -->
-	<!-- <GPIO_Pin>18</GPIO_Pin> -->
-	<!-- <GPIO_Pin>19</GPIO_Pin> -->
+	<GPIO_Inverted>0</GPIO_Inverted>
+	<GPIO_Pin>18</GPIO_Pin>
+	<GPIO_Pin>19</GPIO_Pin>
 	<!-- Units C (Celsius) or F (Fahrenheit) -->
 	<!-- Note: Default is F for Android app which can switch between F and C-->
 	<Temp_Units>F</Temp_Units>
