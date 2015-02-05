@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2012-2015 Stephen P. Smith
+# Copyright (c) 2012-2014 Stephen P. Smith
 #
 # Permission is hereby granted, free of charge, to any person obtaining 
 # a copy of this software and associated documentation files 
@@ -133,11 +133,11 @@ def GPIO_Toggle(GPIO_Num=None, onoff=None):
     if len(pinGPIOList) >= int(GPIO_Num):
         out = {"pin" : pinGPIOList[int(GPIO_Num)-1], "status" : "off"}
         if onoff == "on":
-            GPIO.output(pinGPIOList[int(GPIO_Num)-1], True)
+            GPIO.output(pinGPIOList[int(GPIO_Num)-1], ON)
             out["status"] = "on"
             print "GPIO Pin #%s is toggled on" % pinGPIOList[int(GPIO_Num)-1] 
         else: #off
-            GPIO.output(pinGPIOList[int(GPIO_Num)-1], False)
+            GPIO.output(pinGPIOList[int(GPIO_Num)-1], OFF)
             print "GPIO Pin #%s is toggled off" % pinGPIOList[int(GPIO_Num)-1] 
     else:
         out = {"pin" : 0, "status" : "off"}
@@ -245,16 +245,16 @@ def heatProcGPIO(cycle_time, duty_cycle, pinNum, conn):
                 cycle_time, duty_cycle = conn.recv()
             conn.send([cycle_time, duty_cycle])  
             if duty_cycle == 0:
-                GPIO.output(pinNum, False)
+                GPIO.output(pinNum, OFF)
                 time.sleep(cycle_time)
             elif duty_cycle == 100:
-                GPIO.output(pinNum, True)
+                GPIO.output(pinNum, ON)
                 time.sleep(cycle_time)
             else:
                 on_time, off_time = getonofftime(cycle_time, duty_cycle)
-                GPIO.output(pinNum, True)
+                GPIO.output(pinNum, ON)
                 time.sleep(on_time)
-                GPIO.output(pinNum, False)
+                GPIO.output(pinNum, OFF)
                 time.sleep(off_time)
 
 def unPackParamInitAndPost(paramStatus):
@@ -518,7 +518,16 @@ if __name__ == '__main__':
     if gpioNumberingScheme == "BOARD":
         GPIO.setmode(GPIO.BOARD)
     else:
-        GPIO.setmode(GPIO.BCM)
+	GPIO.setmode(GPIO.BCM)
+
+    gpioInverted = xml_root.find('GPIO_Inverted').text.strip()
+    if gpioInverted == "0":
+	ON = 1
+	OFF = 0
+    else:
+	ON = 0
+	OFF = 1
+
 
     pinHeatList=[]
     for pin in xml_root.iter('Heat_Pin'):
