@@ -74,6 +74,8 @@ def index():
         param.status["set_point"] = float(request.form["setpoint"])
         param.status["duty_cycle"] = float(request.form["dutycycle"]) #is boil duty cycle if mode == "boil"
         param.status["cycle_time"] = float(request.form["cycletime"])
+        param.status["boil_manage_temp"] = float(request.form.get("boilManageTemp", param.status["boil_manage_temp"])) 
+        param.status["num_pnts_smooth"] = int(request.form.get("numPntsSmooth", param.status["num_pnts_smooth"])) 
         param.status["k_param"] = float(request.form["k"])
         param.status["i_param"] = float(request.form["i"])
         param.status["d_param"] = float(request.form["d"])
@@ -92,6 +94,8 @@ def postparams(sensorNum=None):
     param.status["set_point"] = float(request.form["setpoint"])
     param.status["duty_cycle"] = float(request.form["dutycycle"]) #is boil duty cycle if mode == "boil"
     param.status["cycle_time"] = float(request.form["cycletime"])
+    param.status["boil_manage_temp"] = float(request.form.get("boilManageTemp", param.status["boil_manage_temp"])) 
+    param.status["num_pnts_smooth"] = int(request.form.get("numPntsSmooth", param.status["num_pnts_smooth"]))
     param.status["k_param"] = float(request.form["k"])
     param.status["i_param"] = float(request.form["i"])
     param.status["d_param"] = float(request.form["d"])
