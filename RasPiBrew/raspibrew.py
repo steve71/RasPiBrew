@@ -170,6 +170,9 @@ def getstatus(sensorNum=None):
         param.status["temp"] = "-999"
         
     return jsonify(**param.status)
+
+def getbrewtime():
+    return (time.time() - brewtime)    
        
 # Retrieve temperature from DS18B20 temperature sensor
 def tempData1Wire(tempSensorId):
@@ -183,9 +186,6 @@ def tempData1Wire(tempSensorId):
         
     return temp_C
 
-def getbrewtime():
-    return (time.time() - brewtime)	
-
 # Stand Alone Get Temperature Process               
 def gettempProc(conn, myTempSensorNum):
     p = current_process()
@@ -194,9 +194,7 @@ def gettempProc(conn, myTempSensorNum):
     tempSensorIdList = [];
     for tempSensorId in xml_root.iter('Temp_Sensor_Id'):
         tempSensorIdList.append(tempSensorId.text.strip())
-    
     #tempSensorId = xml_root.find('Temp_Sensor_Id').text.strip()
-    
     while (True):
         t = time.time()
         time.sleep(.5) #.1+~.83 = ~1.33 seconds
@@ -349,6 +347,8 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
     	ff = open("brewery" + str(myTempSensorNum) + ".csv", "wb")
         ff.close()
 
+        readyPIDcalc = False
+
         while (True):
             readytemp = False
             while parent_conn_temp.poll(): #Poll Get Temperature Process Pipe
@@ -400,10 +400,13 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
                     #print "temp_ma = %.2f" % temp_ma
                     #print temp_ma_list
 
-                    #calculate PID every cycle - always get latest temperature
-                    duty_cycle = pid.calcPID_reg4(temp_ma, set_point, True)
-                    #send to heat process every cycle
-                    parent_conn_heat.send([cycle_time, duty_cycle])
+                    #calculate PID every cycle
+                    if (readyPIDcalc == True):
+                        duty_cycle = pid.calcPID_reg4(temp_ma, set_point, True)
+                        #send to heat process every cycle
+                        parent_conn_heat.send([cycle_time, duty_cycle])
+                        readyPIDcalc = False
+                    
                 if mode == "boil":
                     if (temp > boil_manage_temp) and (manage_boil_trigger == True): #do once
                         manage_boil_trigger = False
@@ -439,6 +442,7 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
                     ser.write("?y2?x00Duty: ")
                     ser.write("%3.1f" % duty_cycle)
                     ser.write("%     ")
+                readyPIDcalc = True
 
             readyPOST = False
             while conn.poll(): #POST settings - Received POST from web browser or Android device
