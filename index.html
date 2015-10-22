@@ -180,9 +180,9 @@ Install pip (package installer):
 <p>Copy software to <code>/var/www</code> preserving the directory structure.</p>
 
 <p>At the command prompt type:
-sudo nano /boot/config.txt
+'sudo nano /boot/config.txt'
 At the bottom of the file add the line:
-dtoverlay=w1-gpio
+'dtoverlay=w1-gpio'
 Save the file and then reboot.</p>
 
 <p>Replace the temp sensor id in config.xml with the id of your DS18B20 temperature sensor found in the <code>/sys/bus/w1/devices/</code> directory on the Raspberry Pi.</p>
