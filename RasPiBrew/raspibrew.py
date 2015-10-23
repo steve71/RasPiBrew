@@ -176,8 +176,10 @@ def getbrewtime():
        
 # Retrieve temperature from DS18B20 temperature sensor
 def tempData1Wire(tempSensorId):
-    
-    pipe = Popen(["cat","/sys/bus/w1/devices/w1_bus_master1/" + tempSensorId + "/w1_slave"], stdout=PIPE)
+    # Raspbian build in January 2015 (kernel 3.18.8 and higher) has changed the device tree.  If using an old build 
+    # uncomment next line and comment out the line below it
+    # pipe = Popen(["cat","/sys/bus/w1/devices/w1_bus_master1/" + tempSensorId + "/w1_slave"], stdout=PIPE)
+    pipe = Popen(["cat","/sys/bus/w1/devices/" + tempSensorId + "/w1_slave"], stdout=PIPE)
     result = pipe.communicate()[0]
     if (result.split('\n')[0].split(' ')[11] == "YES"):
         temp_C = float(result.split("=")[-1])/1000 # temp in Celcius
@@ -506,7 +508,9 @@ if __name__ == '__main__':
     brewtime = time.time()
     
     os.chdir("/var/www/RasPiBrew")
-     
+    
+    # The next two calls are not needed for January 2015 or newer builds (kernel 3.18.8 and higher)
+    # /boot/config.txt needs 'dtoverlay=w1-gpio' at the bottom of the file
     call(["modprobe", "w1-gpio"])
     call(["modprobe", "w1-therm"])
     call(["modprobe", "i2c-bcm2708"])
