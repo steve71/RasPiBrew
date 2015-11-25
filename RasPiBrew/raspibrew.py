@@ -33,7 +33,7 @@ from flask import Flask, render_template, request, jsonify
 
 global parent_conn, parent_connB, parent_connC, statusQ, statusQ_B, statusQ_C
 global xml_root, template_name, pinHeatList, pinGPIOList
-global brewtime
+global brewtime, oneWireDir
 
 app = Flask(__name__, template_folder='templates')
 #url_for('static', filename='raspibrew.css')
@@ -176,10 +176,9 @@ def getbrewtime():
        
 # Retrieve temperature from DS18B20 temperature sensor
 def tempData1Wire(tempSensorId):
-    # Raspbian build in January 2015 (kernel 3.18.8 and higher) has changed the device tree.  If using an old build 
-    # uncomment next line and comment out the line below it
-    # pipe = Popen(["cat","/sys/bus/w1/devices/w1_bus_master1/" + tempSensorId + "/w1_slave"], stdout=PIPE)
-    pipe = Popen(["cat","/sys/bus/w1/devices/" + tempSensorId + "/w1_slave"], stdout=PIPE)
+    #pipe = Popen(["cat","/sys/bus/w1/devices/" + tempSensorId + "/w1_slave"], stdout=PIPE)
+    pipe = Popen(["cat", oneWireDir + tempSensorId + "/w1_slave"], stdout=PIPE)
+    
     result = pipe.communicate()[0]
     if (result.split('\n')[0].split(' ')[11] == "YES"):
         temp_C = float(result.split("=")[-1])/1000 # temp in Celcius
@@ -506,6 +505,14 @@ def logdata(tank, temp, heat):
 if __name__ == '__main__':
 
     brewtime = time.time()
+    
+    # Raspbian build in January 2015 (kernel 3.18.8 and higher) has changed the device tree.
+    oldOneWireDir = "/sys/bus/w1/devices/w1_bus_master1/"
+    newOneWireDir = "/sys/bus/w1/devices/"
+    if os.path.exists(oldOneWireDir):
+        oneWireDir = oldOneWireDir 
+    else:
+        oneWireDir = newOneWireDir
     
     os.chdir("/var/www/RasPiBrew")
     
