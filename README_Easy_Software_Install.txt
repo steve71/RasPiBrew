@@ -6,7 +6,7 @@ Simple Complete Raspberry Pi & RasPiBrew Software Installation from Windows
 3) Use Win32DiskImager to burn latest Raspbian Image from http://www.raspberrypi.org/downloads/
 4) When Raspberry pi boots up (sudo raspi-config):
 	a) Expand Filesystem
-	b) Set Internationalisation options
+	b) Set Internationalization options
 	c) If using LCD go into Advanced Options and disable kernel messages on the serial connection
 5) Reboot the Raspberry Pi
 6) Type: 'sudo nano /etc/network/interfaces' and set up static ip as shown in the `interface` file that is in the RasPiBrew directory
