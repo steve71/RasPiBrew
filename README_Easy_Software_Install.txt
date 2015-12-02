@@ -4,9 +4,10 @@ Simple Complete Raspberry Pi & RasPiBrew Software Installation from Windows
 1) Google SDFormatter, Win32DiskImager and Putty and download them
 2) Use SDFormatter to format SD card
 3) Use Win32DiskImager to burn latest Raspbian Image from http://www.raspberrypi.org/downloads/
-4) When Raspberry pi boots up:
+4) When Raspberry pi boots up (sudo raspi-config):
 	a) Expand Filesystem
 	b) Set Internationalisation options
+	c) If using LCD go into Advanced Options and disable kernel messages on the serial connection
 5) Reboot the Raspberry Pi
 6) Type: 'sudo nano /etc/network/interfaces' and set up static ip as shown in the `interface` file that is in the RasPiBrew directory
 7) Type: 'sudo nano /boot/config.txt'.  At the bottom of the file add the line 'dtoverlay=w1-gpio' and save the file to enable one wire devices
