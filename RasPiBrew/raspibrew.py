@@ -31,6 +31,8 @@ from pid import pidpy as PIDController
 import xml.etree.ElementTree as ET
 from flask import Flask, render_template, request, jsonify
 
+import Temp1Wire
+
 global parent_conn, parent_connB, parent_connC, statusQ, statusQ_B, statusQ_C
 global xml_root, template_name, pinHeatList, pinGPIOList
 global brewtime, oneWireDir
@@ -188,24 +190,16 @@ def tempData1Wire(tempSensorId):
     return temp_C
 
 # Stand Alone Get Temperature Process               
-def gettempProc(conn, myTempSensorNum):
+def gettempProc(conn, myTempSensor):
     p = current_process()
     print 'Starting:', p.name, p.pid
     
-    tempSensorIdList = [];
-    for tempSensorId in xml_root.iter('Temp_Sensor_Id'):
-        tempSensorIdList.append(tempSensorId.text.strip())
-    #tempSensorId = xml_root.find('Temp_Sensor_Id').text.strip()
     while (True):
         t = time.time()
         time.sleep(.5) #.1+~.83 = ~1.33 seconds
-        tempSensorNum = 0
-        for tempSensorId in tempSensorIdList:
-            if (tempSensorNum == myTempSensorNum):
-                num = tempData1Wire(tempSensorId)
-                elapsed = "%.2f" % (time.time() - t)
-                conn.send([num, tempSensorNum, elapsed])
-            tempSensorNum += 1
+        num = myTempSensor.readTempC()
+        elapsed = "%.2f" % (time.time() - t)
+        conn.send([num, myTempSensor.sensorNum, elapsed])
         
 #Get time heating element is on and off during a set cycle time
 def getonofftime(cycle_time, duty_cycle):
@@ -300,7 +294,7 @@ def packParamGet(numTempSensors, myTempSensorNum, temp, tempUnits, elapsed, mode
     return param.status
         
 # Main Temperature Control Process
-def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ, conn):
+def tempControlProc(myTempSensor, LCD, pinNum, readOnly, paramStatus, statusQ, conn):
     
         mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, \
         k_param, i_param, d_param = unPackParamInitAndPost(paramStatus)
@@ -323,7 +317,7 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
         #Pipe to communicate with "Get Temperature Process"
         parent_conn_temp, child_conn_temp = Pipe()    
         #Start Get Temperature Process        
-        ptemp = Process(name = "gettempProc", target=gettempProc, args=(child_conn_temp, myTempSensorNum))
+        ptemp = Process(name = "gettempProc", target=gettempProc, args=(child_conn_temp, myTempSensor))
         ptemp.daemon = True
         ptemp.start()   
 
@@ -345,7 +339,7 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
         temp_ma = 0.0
 
 	#overwrite log file for new data log
-    	ff = open("brewery" + str(myTempSensorNum) + ".csv", "wb")
+        ff = open("brewery" + str(myTempSensor.sensorNum) + ".csv", "wb")
         ff.close()
 
         readyPIDcalc = False
@@ -416,7 +410,7 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
 
                 #put current status in queue
                 try:
-                    paramStatus = packParamGet(numTempSensors, myTempSensorNum, temp_str, tempUnits, elapsed, mode, cycle_time, duty_cycle, \
+                    paramStatus = packParamGet(numTempSensors, myTempSensor.sensorNum, temp_str, tempUnits, elapsed, mode, cycle_time, duty_cycle, \
                             boil_duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, k_param, i_param, d_param)
                     statusQ.put(paramStatus) #GET request
                 except Full:
@@ -428,7 +422,7 @@ def tempControlProc(myTempSensorNum, LCD, pinNum, readOnly, paramStatus, statusQ
                 print "Current Temp: %3.2f deg %s, Heat Output: %3.1f%%" \
                                                         % (temp, tempUnits, duty_cycle)
 
-                logdata(myTempSensorNum, temp, duty_cycle)
+                logdata(myTempSensor.sensorNum, temp, duty_cycle)
 
                 readytemp == False
 
@@ -505,15 +499,7 @@ def logdata(tank, temp, heat):
 if __name__ == '__main__':
 
     brewtime = time.time()
-    
-    # Raspbian build in January 2015 (kernel 3.18.8 and higher) has changed the device tree.
-    oldOneWireDir = "/sys/bus/w1/devices/w1_bus_master1/"
-    newOneWireDir = "/sys/bus/w1/devices/"
-    if os.path.exists(oldOneWireDir):
-        oneWireDir = oldOneWireDir 
-    else:
-        oneWireDir = newOneWireDir
-    
+        
     os.chdir("/var/www/RasPiBrew")
     
     # The next two calls are not needed for January 2015 or newer builds (kernel 3.18.8 and higher)
@@ -559,41 +545,39 @@ if __name__ == '__main__':
     for pinNum in pinGPIOList:
         GPIO.setup(pinNum, GPIO.OUT)
     
-    myTempSensorNum = 0
     for tempSensorId in xml_root.iter('Temp_Sensor_Id'):
+        myTempSensor = Temp1Wire.Temp1Wire(tempSensorId.text.strip())     
           
-        if len(pinHeatList) >= myTempSensorNum + 1:
-            pinNum = pinHeatList[myTempSensorNum]
+        if len(pinHeatList) >= myTempSensor.sensorNum + 1:
+            pinNum = pinHeatList[myTempSensor.sensorNum]
             readOnly = False
         else:
             pinNum = 0
             readOnly = True
         
-        if myTempSensorNum >= 1:
+        if myTempSensor.sensorNum >= 1:
             LCD = False
              
-        if myTempSensorNum == 0:
+        if myTempSensor.sensorNum == 0:
             statusQ = Queue(2) #blocking queue        
-            parent_conn, child_conn = Pipe()     
-            p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensorNum, LCD, pinNum, readOnly, \
+            parent_conn, child_conn = Pipe()
+            p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensor, LCD, pinNum, readOnly, \
                                                               param.status, statusQ, child_conn))
             p.start()
             
-        if myTempSensorNum == 1:
+        if myTempSensor.sensorNum == 1:
             statusQ_B = Queue(2) #blocking queue    
             parent_connB, child_conn = Pipe()  
-            p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensorNum, LCD, pinNum, readOnly, \
+            p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensor, LCD, pinNum, readOnly, \
                                                               param.status, statusQ_B, child_conn))
             p.start()
             
-        if myTempSensorNum == 2:
+        if myTempSensor.sensorNum == 2:
             statusQ_C = Queue(2) #blocking queue 
             parent_connC, child_conn = Pipe()     
-            p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensorNum, LCD, pinNum, readOnly, \
+            p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensor, LCD, pinNum, readOnly, \
                                                               param.status, statusQ_C, child_conn))
             p.start()
-            
-        myTempSensorNum += 1
-      
+
     app.debug = True 
     app.run(use_reloader=False, host='0.0.0.0')
