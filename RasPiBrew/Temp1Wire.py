@@ -1,14 +1,8 @@
 from subprocess import Popen, PIPE, call
 import os
 
-<<<<<<< HEAD
 class Temp1Wire:
     numSensor = 0
-=======
-numSensor = 0
-
-class Temp1Wire:
->>>>>>> 948529d... Factoring out 1W temp sensor to a reusable module
     def __init__(self, tempSensorId):
         self.tempSensorId = tempSensorId
         self.sensorNum = Temp1Wire.numSensor
