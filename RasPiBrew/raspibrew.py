@@ -176,19 +176,6 @@ def getstatus(sensorNum=None):
 def getbrewtime():
     return (time.time() - brewtime)    
        
-# Retrieve temperature from DS18B20 temperature sensor
-def tempData1Wire(tempSensorId):
-    #pipe = Popen(["cat","/sys/bus/w1/devices/" + tempSensorId + "/w1_slave"], stdout=PIPE)
-    pipe = Popen(["cat", oneWireDir + tempSensorId + "/w1_slave"], stdout=PIPE)
-    
-    result = pipe.communicate()[0]
-    if (result.split('\n')[0].split(' ')[11] == "YES"):
-        temp_C = float(result.split("=")[-1])/1000 # temp in Celcius
-    else:
-        temp_C = -99 #bad temp reading
-        
-    return temp_C
-
 # Stand Alone Get Temperature Process               
 def gettempProc(conn, myTempSensor):
     p = current_process()
