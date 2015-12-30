@@ -32,6 +32,7 @@ import xml.etree.ElementTree as ET
 from flask import Flask, render_template, request, jsonify
 
 import Temp1Wire
+import Display
 
 global parent_conn, parent_connB, parent_connC, statusQ, statusQ_B, statusQ_C
 global xml_root, template_name, pinHeatList, pinGPIOList
@@ -281,23 +282,11 @@ def packParamGet(numTempSensors, myTempSensorNum, temp, tempUnits, elapsed, mode
     return param.status
         
 # Main Temperature Control Process
-def tempControlProc(myTempSensor, LCD, pinNum, readOnly, paramStatus, statusQ, conn):
+def tempControlProc(myTempSensor, display, pinNum, readOnly, paramStatus, statusQ, conn):
     
         mode, cycle_time, duty_cycle, boil_duty_cycle, set_point, boil_manage_temp, num_pnts_smooth, \
         k_param, i_param, d_param = unPackParamInitAndPost(paramStatus)
     
-        #initialize LCD
-        if LCD:
-            ser = serial.Serial("/dev/ttyAMA0", 9600)
-            ser.write("?BFF")
-            time.sleep(.1) #wait 100msec
-            ser.write("?f?a")
-            ser.write("?y0?x00PID off      ")
-            ser.write("?y1?x00HLT:")
-            ser.write("?y3?x00Heat: off      ")
-            ser.write("?D70609090600000000") #define degree symbol
-            time.sleep(.1) #wait 100msec
-            
         p = current_process()
         print 'Starting:', p.name, p.pid
         
@@ -346,17 +335,8 @@ def tempControlProc(myTempSensor, LCD, pinNum, readOnly, paramStatus, statusQ, c
                     temp = temp_C
 
                 temp_str = "%3.2f" % temp
+                display.showTemperature(temp_str)
 
-                if LCD:
-                    #write to LCD
-                    ser.write("?y1?x05")
-                    ser.write(temp_str)
-                    ser.write("?7") #degree
-                    time.sleep(.005) #wait 5msec
-                    if (tempUnits == 'F'):
-                        ser.write("F   ")
-                    else:
-                        ser.write("C   ")
                 readytemp = True
 
             if readytemp == True:
@@ -419,11 +399,7 @@ def tempControlProc(myTempSensor, LCD, pinNum, readOnly, paramStatus, statusQ, c
 
             while parent_conn_heat.poll(): #Poll Heat Process Pipe
                 cycle_time, duty_cycle = parent_conn_heat.recv() #non blocking receive from Heat Process
-                if LCD:
-                    #write to LCD
-                    ser.write("?y2?x00Duty: ")
-                    ser.write("%3.1f" % duty_cycle)
-                    ser.write("%     ")
+                display.showDutyCycle(duty_cycle)
                 readyPIDcalc = True
 
             readyPOST = False
@@ -435,41 +411,25 @@ def tempControlProc(myTempSensor, LCD, pinNum, readOnly, paramStatus, statusQ, c
                 readyPOST = True
             if readyPOST == True:
                 if mode == "auto":
-                    if LCD:
-                        ser.write("?y0?x00Auto Mode     ")
-                        ser.write("?y1?x00HLT:")
-                        ser.write("?y3?x00Set To: ")
-                        ser.write("%3.1f" % set_point)
-                        ser.write("?7") #degree
-                        time.sleep(.005) #wait 5msec
-                        ser.write("F   ")
+                    display.showAutoMode(set_point)
                     print "auto selected"
                     pid = PIDController.pidpy(cycle_time, k_param, i_param, d_param) #init pid
                     duty_cycle = pid.calcPID_reg4(temp_ma, set_point, True)
                     parent_conn_heat.send([cycle_time, duty_cycle])
                 if mode == "boil":
-                    if LCD:
-                        ser.write("?y0?x00Boil Mode     ")
-                        ser.write("?y1?x00BK: ")
-                        ser.write("?y3?x00Heat: on       ")
+                    display.showBoilMode()
                     print "boil selected"
                     boil_duty_cycle = duty_cycle_temp
                     duty_cycle = 100 #full power to boil manage temperature
                     manage_boil_trigger = True
                     parent_conn_heat.send([cycle_time, duty_cycle])
                 if mode == "manual":
-                    if LCD:
-                        ser.write("?y0?x00Manual Mode     ")
-                        ser.write("?y1?x00BK: ")
-                        ser.write("?y3?x00Heat: on       ")
+                    display.showManualMode()
                     print "manual selected"
                     duty_cycle = duty_cycle_temp
                     parent_conn_heat.send([cycle_time, duty_cycle])
                 if mode == "off":
-                    if LCD:
-                        ser.write("?y0?x00PID off      ")
-                        ser.write("?y1?x00HLT:")
-                        ser.write("?y3?x00Heat: off      ")
+                    display.showOffMode()
                     print "off selected"
                     duty_cycle = 0
                     parent_conn_heat.send([cycle_time, duty_cycle])
@@ -502,9 +462,10 @@ if __name__ == '__main__':
     template_name = xml_root.find('Template').text.strip()
     useLCD = xml_root.find('Use_LCD').text.strip()
     if useLCD == "yes":
-        LCD = True
+        tempUnits = xml_root.find('Temp_Units').text.strip()
+        display = Display.LCD(tempUnits)
     else:
-        LCD = False 
+        display = Display.NoDisplay()
     
     gpioNumberingScheme = xml_root.find('GPIO_pin_numbering_scheme').text.strip()
     if gpioNumberingScheme == "BOARD":
@@ -543,26 +504,26 @@ if __name__ == '__main__':
             readOnly = True
         
         if myTempSensor.sensorNum >= 1:
-            LCD = False
+            display = Display.NoDisplay()
              
         if myTempSensor.sensorNum == 0:
             statusQ = Queue(2) #blocking queue        
             parent_conn, child_conn = Pipe()
-            p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensor, LCD, pinNum, readOnly, \
+            p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensor, display, pinNum, readOnly, \
                                                               param.status, statusQ, child_conn))
             p.start()
             
         if myTempSensor.sensorNum == 1:
             statusQ_B = Queue(2) #blocking queue    
             parent_connB, child_conn = Pipe()  
-            p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensor, LCD, pinNum, readOnly, \
+            p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensor, display, pinNum, readOnly, \
                                                               param.status, statusQ_B, child_conn))
             p.start()
             
         if myTempSensor.sensorNum == 2:
             statusQ_C = Queue(2) #blocking queue 
             parent_connC, child_conn = Pipe()     
-            p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensor, LCD, pinNum, readOnly, \
+            p = Process(name = "tempControlProc", target=tempControlProc, args=(myTempSensor, display, pinNum, readOnly, \
                                                               param.status, statusQ_C, child_conn))
             p.start()
 
