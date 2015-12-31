@@ -447,7 +447,6 @@ if __name__ == '__main__':
 
     brewtime = time.time()
         
-    os.chdir("/var/www/RasPiBrew")
     
     # The next two calls are not needed for January 2015 or newer builds (kernel 3.18.8 and higher)
     # /boot/config.txt needs 'dtoverlay=w1-gpio' at the bottom of the file
@@ -460,6 +459,13 @@ if __name__ == '__main__':
     tree = ET.parse('config.xml')
     xml_root = tree.getroot()
     template_name = xml_root.find('Template').text.strip()
+
+    root_dir_elem = xml_root.find('RootDir')
+    if root_dir_elem is not None:
+        os.chdir(root_dir_elem.text.strip())
+    else:
+        print("No RootDir tag found in config.xml, running from current directory")
+
     useLCD = xml_root.find('Use_LCD').text.strip()
     if useLCD == "yes":
         tempUnits = xml_root.find('Temp_Units').text.strip()
