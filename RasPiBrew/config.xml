@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Config>
+	<!-- Where the RasPiBrew will be served from -->
+	<RootDir>/var/www/RasPiBrew</RootDir>
 	<!-- Place templates (themes) in templates folder -->
 	<!-- The static folder must contain the corresponding css and js files -->
 	<Template>raspibrew_bootstrap.html</Template>
