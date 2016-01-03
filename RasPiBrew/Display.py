@@ -9,6 +9,8 @@ class Display:
         pass
     def showManualMode(self):
         pass
+    def showOffMode(self):
+        pass
 
 class LCD(Display):
     def __init__(self, tempUnits):
