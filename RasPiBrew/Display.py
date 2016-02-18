@@ -31,7 +31,7 @@ class LCD(Display):
         ser.write(temp_str)
         ser.write("?7") #degree
         time.sleep(.005) #wait 5msec
-        if (tempUnits == 'F'):
+        if (self.tempUnits == 'F'):
             ser.write("F   ")
         else:
             ser.write("C   ")
