@@ -49,7 +49,10 @@ class LCD(Display):
         ser.write("%3.1f" % set_point)
         ser.write("?7") #degree
         time.sleep(.005) #wait 5msec
-        ser.write("F   ")
+        if (self.tempUnits == 'F'):
+            ser.write("F   ")
+        else:
+            ser.write("C   ")
 
     def showBoilMode(self):
         ser.write("?y0?x00Boil Mode     ")
