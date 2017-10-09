@@ -117,5 +117,5 @@ if __name__=="__main__":
     temp = 80
     setpoint = 100
     enable = True
-    print pid.calcPID_reg4(temp, setpoint, enable)
+    print(pid.calcPID_reg4(temp, setpoint, enable))
     
